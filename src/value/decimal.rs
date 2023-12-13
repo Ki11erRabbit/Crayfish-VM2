@@ -8,6 +8,38 @@ pub enum Decimal {
 }
 
 
+impl std::ops::Add for Decimal {
+    type Output = Self;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        match (self, rhs) {
+            (Decimal::F32(left), Decimal::F32(right)) => Decimal::F32(left + right),
+            (Decimal::F64(left), Decimal::F64(right)) => Decimal::F64(left + right),
+            (Decimal::Rational(left), Decimal::Rational(right)) => Decimal::Rational(left + right),
+            (Decimal::F32(left), Decimal::F64(right)) => Decimal::F64(left as f64 + right),
+            (Decimal::F64(left), Decimal::F32(right)) => Decimal::F64(left + right as f64),
+            _ => panic!("Cannot add {:?} and {:?}", self, rhs),
+        }
+    }
+
+}
+
+impl std::ops::Sub for Decimal {
+    type Output = Self;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        match (self, rhs) {
+            (Decimal::F32(left), Decimal::F32(right)) => Decimal::F32(left - right),
+            (Decimal::F64(left), Decimal::F64(right)) => Decimal::F64(left - right),
+            (Decimal::Rational(left), Decimal::Rational(right)) => Decimal::Rational(left - right),
+            (Decimal::F32(left), Decimal::F64(right)) => Decimal::F64(left as f64 - right),
+            (Decimal::F64(left), Decimal::F32(right)) => Decimal::F64(left - right as f64),
+            _ => panic!("Cannot subtract {:?} and {:?}", self, rhs),
+        }
+    }
+
+}
+
 impl Display for Decimal {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
