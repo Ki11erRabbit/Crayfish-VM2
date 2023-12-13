@@ -2,7 +2,7 @@ use std::fmt::{Debug, Display, Formatter};
 use crate::program::StringTablePath;
 use crate::value::decimal::Decimal;
 use crate::value::integer::Integer;
-use crate::value::Value;
+use crate::value::{Value, ValueType};
 
 #[derive(Clone)]
 pub struct Instruction {
@@ -183,6 +183,7 @@ pub enum RealInstruction {
     VectorNew(usize),
     VectorGet(usize),
     VectorSet(usize),
+    VectorLength,
     // Product
     ProductNew(usize),
     ProductGet(Box<str>),
@@ -225,12 +226,7 @@ pub enum RealInstruction {
     // String
     StringNew(Box<str>),
     StringConcat,
-    StringEqual,
-    StringNotEqual,
-    StringLessThan,
-    StringLessThanOrEqual,
-    StringGreaterThan,
-    StringGreaterThanOrEqual,
+    StringLength,
     // Boolean
     BooleanNew(bool),
     BooleanAnd,
@@ -254,6 +250,8 @@ pub enum RealInstruction {
     Read,
     // String Table
     GetStringRef(StringTablePath, usize),
+    // Cast
+    Cast(ValueType),
 }
 
 impl Display for RealInstruction {
@@ -269,6 +267,7 @@ impl Display for RealInstruction {
             VectorNew(size) => write!(f, "vector.new {}", size),
             VectorGet(index) => write!(f, "vector.get {}", index),
             VectorSet(index) => write!(f, "vector.set {}", index),
+            VectorLength => write!(f, "vector.length"),
             ProductNew(size) => write!(f, "product.new {}", size),
             ProductGet(name) => write!(f, "product.get {}", name),
             ProductSet(index) => write!(f, "product.set {}", index),
@@ -304,12 +303,7 @@ impl Display for RealInstruction {
             DecimalNegate => write!(f, "decimal.negate"),
             StringNew(value) => write!(f, "string.new {}", value),
             StringConcat => write!(f, "string.concat"),
-            StringEqual => write!(f, "string.equal"),
-            StringNotEqual => write!(f, "string.not_equal"),
-            StringLessThan => write!(f, "string.less_than"),
-            StringLessThanOrEqual => write!(f, "string.less_than_or_equal"),
-            StringGreaterThan => write!(f, "string.greater_than"),
-            StringGreaterThanOrEqual => write!(f, "string.greater_than_or_equal"),
+            StringLength => write!(f, "string.length"),
             BooleanNew(value) => write!(f, "boolean.new {}", value),
             BooleanAnd => write!(f, "boolean.and"),
             BooleanOr => write!(f, "boolean.or"),
@@ -326,6 +320,7 @@ impl Display for RealInstruction {
             Write => write!(f, "write"),
             Read => write!(f, "read"),
             GetStringRef(path, index) => write!(f, "get_string_ref {} {}", path, index),
+            Cast(value_type) => write!(f, "cast {}", value_type),
         }
     }
 }

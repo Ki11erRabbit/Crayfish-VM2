@@ -21,7 +21,7 @@ pub trait StackChunk {
 
 
 pub struct Stack<'a> {
-    pub data: Vec<&'a RefCell<dyn StackChunk>>
+    pub data: Vec<&'a dyn StackChunk>
 }
 
 
@@ -32,15 +32,15 @@ impl<'a> Stack<'a> {
         }
     }
 
-    pub fn push(&'a mut self, chunk: &'a RefCell<dyn StackChunk>) {
+    pub fn push(&'a mut self, chunk: &'a dyn StackChunk) {
         self.data.push(chunk);
     }
 
-    pub fn pop(&'a mut self) -> &'a RefCell<dyn StackChunk> {
+    pub fn pop(&'a mut self) -> &'a dyn StackChunk {
         self.data.pop().expect("Stack is empty")
     }
 
-    pub fn peek(&'a self) -> &'a RefCell<dyn StackChunk> {
+    pub fn peek(&'a self) -> &&'a dyn StackChunk {
         self.data.last().expect("Stack is empty")
     }
 

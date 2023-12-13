@@ -2,6 +2,46 @@ use std::fmt::{Debug, Display, Formatter};
 use malachite::Natural;
 use crate::value::Reference;
 
+#[derive(Debug, Clone)]
+pub enum VectorType {
+    U8,
+    U16,
+    U32,
+    U64,
+    I8,
+    I16,
+    I32,
+    I64,
+    F32,
+    F64,
+    Natural,
+    Integer,
+    Rational,
+    Reference,
+}
+
+impl Display for VectorType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            VectorType::U8 => write!(f, "u8"),
+            VectorType::U16 => write!(f, "u16"),
+            VectorType::U32 => write!(f, "u32"),
+            VectorType::U64 => write!(f, "u64"),
+            VectorType::I8 => write!(f, "i8"),
+            VectorType::I16 => write!(f, "i16"),
+            VectorType::I32 => write!(f, "i32"),
+            VectorType::I64 => write!(f, "i64"),
+            VectorType::F32 => write!(f, "f32"),
+            VectorType::F64 => write!(f, "f64"),
+            VectorType::Natural => write!(f, "natural"),
+            VectorType::Integer => write!(f, "integer"),
+            VectorType::Rational => write!(f, "rational"),
+            VectorType::Reference => write!(f, "reference"),
+        }
+    }
+}
+
+
 #[derive(Clone)]
 pub enum Vector {
     U8(*mut u8, usize),
