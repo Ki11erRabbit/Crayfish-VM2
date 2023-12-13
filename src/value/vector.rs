@@ -1,5 +1,5 @@
 use std::fmt::{Debug, Display, Formatter};
-use crate::value::natural::Natural;
+use malachite::Natural;
 
 #[derive(Clone)]
 pub enum Vector {
@@ -14,7 +14,7 @@ pub enum Vector {
     F32(*mut f32, usize),
     F64(*mut f64, usize),
     Natural(*mut Natural, usize),
-    Integer(*mut (bool, Natural), usize),
+    Integer(*mut malachite::Integer, usize),
     Reference(*mut u64, usize),
 }
 
@@ -158,11 +158,7 @@ impl Display for Vector {
                 write!(f, "[")?;
                 for i in 0..*size {
                     unsafe {
-                        if (*pointer.offset(i as isize)).0 {
-                            write!(f, "-{}", (*pointer.offset(i as isize)).1)?;
-                        } else {
-                            write!(f, "{}", (*pointer.offset(i as isize)).1)?;
-                        }
+                        write!(f, "{}", *pointer.offset(i as isize))?;
                     }
                     if i != *size - 1 {
                         write!(f, " ")?;
@@ -215,11 +211,7 @@ impl Debug for Vector {
                 write!(f, "[")?;
                 for i in 0..*size {
                     unsafe {
-                        if (*pointer.offset(i as isize)).0 {
-                            write!(f, "-{:?}", (*pointer.offset(i as isize)).1)?;
-                        } else {
-                            write!(f, "{:?}", (*pointer.offset(i as isize)).1)?;
-                        }
+                        write!(f, "{:?}", *pointer.offset(i as isize))?;
                     }
                     if i != *size - 1 {
                         write!(f, " ")?;

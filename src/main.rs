@@ -1,4 +1,4 @@
-use crate::value::natural::Natural;
+use malachite::Natural;
 
 pub mod value;
 pub mod instruction;

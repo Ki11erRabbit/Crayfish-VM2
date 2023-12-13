@@ -1,5 +1,5 @@
 use std::fmt::{Debug, Display};
-use crate::value::natural::Natural;
+use malachite::Natural;
 
 #[derive(Clone, PartialEq)]
 pub enum Integer {
@@ -12,7 +12,7 @@ pub enum Integer {
     I32(i32),
     I64(i64),
     Natural(Natural),
-    Integer(bool, Natural),
+    Integer(malachite::Integer),
 }
 
 
@@ -28,13 +28,7 @@ impl Display for Integer {
             Integer::I32(value) => write!(f, "{}", value),
             Integer::I64(value) => write!(f, "{}", value),
             Integer::Natural(value) => write!(f, "{}", value),
-            Integer::Integer(sign, value) => {
-                if *sign {
-                    write!(f, "-{}", value)
-                } else {
-                    write!(f, "{}", value)
-                }
-            }
+            Integer::Integer(value) => write!(f, "{}", value),
         }
     }
 }
@@ -51,13 +45,7 @@ impl Debug for Integer {
             Integer::I32(value) => write!(f, "{:?}", value),
             Integer::I64(value) => write!(f, "{:?}", value),
             Integer::Natural(value) => write!(f, "{:?}", value),
-            Integer::Integer(sign, value) => {
-                if *sign {
-                    write!(f, "-{:?}", value)
-                } else {
-                    write!(f, "{:?}", value)
-                }
-            }
+            Integer::Integer(value) => write!(f, "{:?}", value),
         }
     }
 }

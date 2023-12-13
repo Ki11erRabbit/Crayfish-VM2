@@ -14,7 +14,6 @@ pub mod product;
 pub mod sum;
 pub mod tuple;
 pub mod function;
-pub mod natural;
 
 #[derive(Debug, Clone)]
 pub enum Value {
