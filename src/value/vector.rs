@@ -1,5 +1,6 @@
 use std::fmt::{Debug, Display, Formatter};
 use malachite::Natural;
+use crate::value::Reference;
 
 #[derive(Clone)]
 pub enum Vector {
@@ -15,7 +16,8 @@ pub enum Vector {
     F64(*mut f64, usize),
     Natural(*mut Natural, usize),
     Integer(*mut malachite::Integer, usize),
-    Reference(*mut u64, usize),
+    Rational(*mut malachite::Rational, usize),
+    Reference(*mut Reference, usize),
 }
 
 
@@ -166,6 +168,18 @@ impl Display for Vector {
                 }
                 write!(f, "]")
             },
+            Vector::Rational(pointer, size) => {
+                write!(f, "[")?;
+                for i in 0..*size {
+                    unsafe {
+                        write!(f, "{:.2}", *pointer.offset(i as isize))?;
+                    }
+                    if i != *size - 1 {
+                        write!(f, " ")?;
+                    }
+                }
+                write!(f, "]")
+            },
             Vector::Reference(pointer, size) => {
                 write!(f, "[")?;
                 for i in 0..*size {
@@ -208,6 +222,18 @@ impl Debug for Vector {
                 write!(f, "]")
             },
             Vector::Integer(pointer, size) => {
+                write!(f, "[")?;
+                for i in 0..*size {
+                    unsafe {
+                        write!(f, "{:?}", *pointer.offset(i as isize))?;
+                    }
+                    if i != *size - 1 {
+                        write!(f, " ")?;
+                    }
+                }
+                write!(f, "]")
+            },
+            Vector::Rational(pointer, size) => {
                 write!(f, "[")?;
                 for i in 0..*size {
                     unsafe {

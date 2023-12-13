@@ -15,6 +15,9 @@ pub mod sum;
 pub mod tuple;
 pub mod function;
 
+
+pub type Reference = u64;
+
 #[derive(Debug, Clone)]
 pub enum Value {
     String(String),
@@ -24,7 +27,7 @@ pub enum Value {
     Product(ProductType),
     Sum(SumType),
     Function(Function),
-    Reference(u64),
+    Reference(Reference),
     Tuple(Tuple),
     Character(char),
     Boolean(bool),
