@@ -1,5 +1,5 @@
 use std::fmt::{Debug, Display, Formatter};
-use crate::value::float::Float;
+use crate::value::decimal::Decimal;
 use crate::value::integer::Integer;
 use crate::value::Value;
 
@@ -213,14 +213,14 @@ pub enum RealInstruction {
     IntegerShiftLeft,
     IntegerShiftRight,
     // Float
-    FloatNew(Float),
-    FloatAdd,
-    FloatSubtract,
-    FloatMultiply,
-    FloatDivide,
-    FloatModulo,
-    FloatPower,
-    FloatNegate,
+    DecimalNew(Decimal),
+    DecimalAdd,
+    DecimalSubtract,
+    DecimalMultiply,
+    DecimalDivide,
+    DecimalModulo,
+    DecimalPower,
+    DecimalNegate,
     // String
     StringNew(Box<str>),
     StringConcat,
@@ -291,14 +291,14 @@ impl Display for RealInstruction {
             IntegerBitwiseNot => write!(f, "integer.bitwise_not"),
             IntegerShiftLeft => write!(f, "integer.shift_left"),
             IntegerShiftRight => write!(f, "integer.shift_right"),
-            FloatNew(value) => write!(f, "float.new {}", value),
-            FloatAdd => write!(f, "float.add"),
-            FloatSubtract => write!(f, "float.subtract"),
-            FloatMultiply => write!(f, "float.multiply"),
-            FloatDivide => write!(f, "float.divide"),
-            FloatModulo => write!(f, "float.modulo"),
-            FloatPower => write!(f, "float.power"),
-            FloatNegate => write!(f, "float.negate"),
+            DecimalNew(value) => write!(f, "decimal.new {}", value),
+            DecimalAdd => write!(f, "decimal.add"),
+            DecimalSubtract => write!(f, "decimal.subtract"),
+            DecimalMultiply => write!(f, "decimal.multiply"),
+            DecimalDivide => write!(f, "decimal.divide"),
+            DecimalModulo => write!(f, "decimal.modulo"),
+            DecimalPower => write!(f, "decimal.power"),
+            DecimalNegate => write!(f, "decimal.negate"),
             StringNew(value) => write!(f, "string.new {}", value),
             StringConcat => write!(f, "string.concat"),
             StringEqual => write!(f, "string.equal"),

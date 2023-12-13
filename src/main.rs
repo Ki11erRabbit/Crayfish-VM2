@@ -2,6 +2,7 @@ use malachite::Natural;
 
 pub mod value;
 pub mod instruction;
+mod stack;
 
 fn main() {
     let number: u64 = 77777777777777777;

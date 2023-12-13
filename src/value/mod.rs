@@ -1,5 +1,5 @@
 use std::fmt::Display;
-use crate::value::float::Float;
+use crate::value::decimal::Decimal;
 use crate::value::function::Function;
 use crate::value::integer::Integer;
 use crate::value::product::ProductType;
@@ -8,7 +8,7 @@ use crate::value::tuple::Tuple;
 use crate::value::vector::Vector;
 
 pub mod integer;
-pub mod float;
+pub mod decimal;
 pub mod vector;
 pub mod product;
 pub mod sum;
@@ -19,7 +19,7 @@ pub mod function;
 pub enum Value {
     String(String),
     Integer(Integer),
-    Float(Float),
+    Decimal(Decimal),
     Vector(Vector),
     Product(ProductType),
     Sum(SumType),
@@ -36,7 +36,7 @@ impl Display for Value {
         match self {
             Value::String(string) => write!(f, "{}", string),
             Value::Integer(integer) => write!(f, "{}", integer),
-            Value::Float(float) => write!(f, "{}", float),
+            Value::Decimal(float) => write!(f, "{}", float),
             Value::Vector(vector) => write!(f, "{}", vector),
             Value::Product(product) => write!(f, "{}", product),
             Value::Sum(sum) => write!(f, "{}", sum),
