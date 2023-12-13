@@ -18,7 +18,7 @@ impl std::ops::Add for Decimal {
             (Decimal::Rational(left), Decimal::Rational(right)) => Decimal::Rational(left + right),
             (Decimal::F32(left), Decimal::F64(right)) => Decimal::F64(left as f64 + right),
             (Decimal::F64(left), Decimal::F32(right)) => Decimal::F64(left + right as f64),
-            _ => panic!("Cannot add {:?} and {:?}", self, rhs),
+            (x, y) => panic!("Cannot add {:?} and {:?}", x, y),
         }
     }
 
@@ -34,7 +34,7 @@ impl std::ops::Sub for Decimal {
             (Decimal::Rational(left), Decimal::Rational(right)) => Decimal::Rational(left - right),
             (Decimal::F32(left), Decimal::F64(right)) => Decimal::F64(left as f64 - right),
             (Decimal::F64(left), Decimal::F32(right)) => Decimal::F64(left - right as f64),
-            _ => panic!("Cannot subtract {:?} and {:?}", self, rhs),
+            (x, y) => panic!("Cannot subtract {:?} and {:?}", x, y),
         }
     }
 
