@@ -1,5 +1,7 @@
-use crate::value::integer::Natural;
+use std::fmt::{Debug, Display, Formatter};
+use crate::value::natural::Natural;
 
+#[derive(Clone)]
 pub enum Vector {
     U8(*mut u8, usize),
     U16(*mut u16, usize),
@@ -12,5 +14,220 @@ pub enum Vector {
     F32(*mut f32, usize),
     F64(*mut f64, usize),
     Natural(*mut Natural, usize),
+    Integer(*mut (bool, Natural), usize),
     Reference(*mut u64, usize),
+}
+
+
+impl Display for Vector {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Vector::U8(pointer, size) => {
+                write!(f, "[")?;
+                for i in 0..*size {
+                    unsafe {
+                        write!(f, "{}", *pointer.offset(i as isize))?;
+                    }
+                    if i != *size - 1 {
+                        write!(f, ", ")?;
+                    }
+                }
+                write!(f, "]")
+            },
+            Vector::U16(pointer, size) => {
+                write!(f, "[")?;
+                for i in 0..*size {
+                    unsafe {
+                        write!(f, "{}", *pointer.offset(i as isize))?;
+                    }
+                    if i != *size - 1 {
+                        write!(f, ", ")?;
+                    }
+                }
+                write!(f, "]")
+            },
+            Vector::U32(pointer, size) => {
+                write!(f, "[")?;
+                for i in 0..*size {
+                    unsafe {
+                        write!(f, "{}", *pointer.offset(i as isize))?;
+                    }
+                    if i != *size - 1 {
+                        write!(f, ", ")?;
+                    }
+                }
+                write!(f, "]")
+            },
+            Vector::U64(pointer, size) => {
+                write!(f, "[")?;
+                for i in 0..*size {
+                    unsafe {
+                        write!(f, "{}", *pointer.offset(i as isize))?;
+                    }
+                    if i != *size - 1 {
+                        write!(f, ", ")?;
+                    }
+                }
+                write!(f, "]")
+            },
+            Vector::I8(pointer, size) => {
+                write!(f, "[")?;
+                for i in 0..*size {
+                    unsafe {
+                        write!(f, "{}", *pointer.offset(i as isize))?;
+                    }
+                    if i != *size - 1 {
+                        write!(f, ", ")?;
+                    }
+                }
+                write!(f, "]")
+            },
+            Vector::I16(pointer, size) => {
+                write!(f, "[")?;
+                for i in 0..*size {
+                    unsafe {
+                        write!(f, "{}", *pointer.offset(i as isize))?;
+                    }
+                    if i != *size - 1 {
+                        write!(f, ", ")?;
+                    }
+                }
+                write!(f, "]")
+            },
+            Vector::I32(pointer, size) => {
+                write!(f, "[")?;
+                for i in 0..*size {
+                    unsafe {
+                        write!(f, "{}", *pointer.offset(i as isize))?;
+                    }
+                    if i != *size - 1 {
+                        write!(f, ", ")?;
+                    }
+                }
+                write!(f, "]")
+            },
+            Vector::I64(pointer, size) => {
+                write!(f, "[")?;
+                for i in 0..*size {
+                    unsafe {
+                        write!(f, "{}", *pointer.offset(i as isize))?;
+                    }
+                    if i != *size - 1 {
+                        write!(f, ", ")?;
+                    }
+                }
+                write!(f, "]")
+            },
+            Vector::F32(pointer, size) => {
+                write!(f, "[")?;
+                for i in 0..*size {
+                    unsafe {
+                        write!(f, "{:.2}", *pointer.offset(i as isize))?;
+                    }
+                    if i != *size - 1 {
+                        write!(f, ", ")?;
+                    }
+                }
+                write!(f, "]")
+            },
+            Vector::F64(pointer, size) => {
+                write!(f, "[")?;
+                for i in 0..*size {
+                    unsafe {
+                        write!(f, "{:.2}", *pointer.offset(i as isize))?;
+                    }
+                    if i != *size - 1 {
+                        write!(f, ", ")?;
+                    }
+                }
+                write!(f, "]")
+            },
+            Vector::Natural(pointer, size) => {
+                write!(f, "[")?;
+                for i in 0..*size {
+                    unsafe {
+                        write!(f, "{}", *pointer.offset(i as isize))?;
+                    }
+                    if i != *size - 1 {
+                        write!(f, " ")?;
+                    }
+                }
+                write!(f, "]")
+            },
+            Vector::Integer(pointer, size) => {
+                write!(f, "[")?;
+                for i in 0..*size {
+                    unsafe {
+                        if (*pointer.offset(i as isize)).0 {
+                            write!(f, "-{}", (*pointer.offset(i as isize)).1)?;
+                        } else {
+                            write!(f, "{}", (*pointer.offset(i as isize)).1)?;
+                        }
+                    }
+                    if i != *size - 1 {
+                        write!(f, " ")?;
+                    }
+                }
+                write!(f, "]")
+            },
+            Vector::Reference(pointer, size) => {
+                write!(f, "[")?;
+                for i in 0..*size {
+                    unsafe {
+                        write!(f, "{:#x}", *pointer.offset(i as isize))?;
+                    }
+                    if i != *size - 1 {
+                        write!(f, " ")?;
+                    }
+                }
+                write!(f, "]")
+            },
+        }
+    }
+}
+
+impl Debug for Vector {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Vector::U8(_, _) => write!(f, "{}", self),
+            Vector::U16(_, _) => write!(f, "{}", self),
+            Vector::U32(_, _) => write!(f, "{}", self),
+            Vector::U64(_, _) => write!(f, "{}", self),
+            Vector::I8(_, _) => write!(f, "{}", self),
+            Vector::I16(_, _) => write!(f, "{}", self),
+            Vector::I32(_, _) => write!(f, "{}", self),
+            Vector::I64(_, _) => write!(f, "{}", self),
+            Vector::F32(_, _) => write!(f, "{}", self),
+            Vector::F64(_, _) => write!(f, "{}", self),
+            Vector::Natural(pointer, size) => {
+                write!(f, "[")?;
+                for i in 0..*size {
+                    unsafe {
+                        write!(f, "{}", *pointer.offset(i as isize))?;
+                    }
+                    if i != *size - 1 {
+                        write!(f, " ")?;
+                    }
+                }
+                write!(f, "]")
+            },
+            Vector::Integer(pointer, size) => {
+                write!(f, "[")?;
+                for i in 0..*size {
+                    unsafe {
+                        if (*pointer.offset(i as isize)).0 {
+                            write!(f, "-{:?}", (*pointer.offset(i as isize)).1)?;
+                        } else {
+                            write!(f, "{:?}", (*pointer.offset(i as isize)).1)?;
+                        }
+                    }
+                    if i != *size - 1 {
+                        write!(f, " ")?;
+                    }
+                }
+                write!(f, "]")
+            },
+            Vector::Reference(_, _) => write!(f, "{}", self),
+        }
+    }
 }

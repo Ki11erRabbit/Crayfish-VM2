@@ -1,8 +1,7 @@
+use std::fmt::{Debug, Display};
+use crate::value::natural::Natural;
 
-pub struct Natural {
-    bytes: Vec<u8>,
-}
-
+#[derive(Clone, PartialEq)]
 pub enum Integer {
     U8(u8),
     U16(u16),
@@ -14,6 +13,53 @@ pub enum Integer {
     I64(i64),
     Natural(Natural),
     Integer(bool, Natural),
+}
+
+
+impl Display for Integer {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Integer::U8(value) => write!(f, "{}", value),
+            Integer::U16(value) => write!(f, "{}", value),
+            Integer::U32(value) => write!(f, "{}", value),
+            Integer::U64(value) => write!(f, "{}", value),
+            Integer::I8(value) => write!(f, "{}", value),
+            Integer::I16(value) => write!(f, "{}", value),
+            Integer::I32(value) => write!(f, "{}", value),
+            Integer::I64(value) => write!(f, "{}", value),
+            Integer::Natural(value) => write!(f, "{}", value),
+            Integer::Integer(sign, value) => {
+                if *sign {
+                    write!(f, "-{}", value)
+                } else {
+                    write!(f, "{}", value)
+                }
+            }
+        }
+    }
+}
+
+impl Debug for Integer {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Integer::U8(value) => write!(f, "{:?}", value),
+            Integer::U16(value) => write!(f, "{:?}", value),
+            Integer::U32(value) => write!(f, "{:?}", value),
+            Integer::U64(value) => write!(f, "{:?}", value),
+            Integer::I8(value) => write!(f, "{:?}", value),
+            Integer::I16(value) => write!(f, "{:?}", value),
+            Integer::I32(value) => write!(f, "{:?}", value),
+            Integer::I64(value) => write!(f, "{:?}", value),
+            Integer::Natural(value) => write!(f, "{:?}", value),
+            Integer::Integer(sign, value) => {
+                if *sign {
+                    write!(f, "-{:?}", value)
+                } else {
+                    write!(f, "{:?}", value)
+                }
+            }
+        }
+    }
 }
 
 
