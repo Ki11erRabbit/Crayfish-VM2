@@ -1,4 +1,5 @@
-use std::fmt::Display;
+use std::fmt::{Debug, Display, LowerHex};
+use crate::stack::StackChunk;
 use crate::value::decimal::{Decimal, DecimalType};
 use crate::value::function::Function;
 use crate::value::integer::{Integer, IntegerType};
@@ -48,8 +49,20 @@ impl Display for ValueType {
     }
 }
 
+#[derive(Clone)]
+pub struct Reference(pub u64);
 
-pub type Reference = u64;
+impl Display for Reference {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "&{:#x}", self.0)
+    }
+}
+
+impl Debug for Reference {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "&{:#x}", self.0)
+    }
+}
 
 #[derive(Debug, Clone)]
 pub enum Value {
@@ -64,6 +77,33 @@ pub enum Value {
     Tuple(Tuple),
     Character(char),
     Boolean(bool),
+}
+
+impl Value {
+
+    pub fn cast(self, into_type: ValueType) -> Value {
+        match self {
+            Value::Integer(integer) => integer.cast(into_type),
+            Value::Decimal(decimal) => decimal.cast(into_type),
+            x => panic!("Cannot cast {:?} to {:?}", x, into_type),
+        }
+    }
+
+    pub fn into_chunk(self) -> Box<dyn StackChunk> {
+        match self {
+            Value::String(string) => Box::new(string),
+            Value::Integer(integer) => integer.into_chunk(),
+            Value::Decimal(decimal) => decimal.into_chunk(),
+            Value::Vector(vector) => vector.into_chunk(),
+            Value::Product(product) => product.into_chunk(),
+            Value::Sum(sum) => sum.into_chunk(),
+            Value::Function(function) => function.into_chunk(),
+            Value::Reference(reference) => Box::new(reference),
+            Value::Tuple(tuple) => tuple.into_chunk(),
+            Value::Character(character) => Box::new(character),
+            Value::Boolean(boolean) => Box::new(boolean),
+        }
+    }
 }
 
 

@@ -3,19 +3,20 @@ use crate::stack::StackChunk;
 use crate::value::decimal::Decimal;
 
 macro_rules! decimal_chunk {
-    ($name:ident, $variant:ident, $type:ty) => {
-        pub struct $name {
-            pub data: $type
-        }
+    ($variant:ident, $type:ty) => {
 
-        impl StackChunk for $name {
+        impl StackChunk for $type {
             fn get_value(self) -> Value {
-                Value::Decimal(Decimal::$variant(self.data))
+                Value::Decimal(Decimal::$variant(self))
+            }
+
+            fn get_boxed_value(self: Box<Self>) -> Value {
+                Value::Decimal(Decimal::$variant(*self))
             }
         }
     };
 }
 
-decimal_chunk!(F32Chunk, F32, f32);
-decimal_chunk!(F64Chunk, F64, f64);
-decimal_chunk!(RationalChunk, Rational, malachite::Rational);
+decimal_chunk!(F32, f32);
+decimal_chunk!(F64, f64);
+decimal_chunk!(Rational, malachite::Rational);

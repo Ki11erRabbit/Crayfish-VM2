@@ -2,13 +2,14 @@ use crate::stack::StackChunk;
 use crate::value::sum::SumType;
 use crate::value::Value;
 
-pub struct SumChunk {
-    pub data: SumType,
-}
 
 
-impl StackChunk for SumChunk {
+impl StackChunk for SumType {
     fn get_value(self) -> Value {
-        Value::Sum(self.data)
+        Value::Sum(self)
+    }
+
+    fn get_boxed_value(self: Box<Self>) -> Value {
+        Value::Sum(*self)
     }
 }

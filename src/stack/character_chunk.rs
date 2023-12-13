@@ -1,13 +1,15 @@
 use crate::stack::StackChunk;
 use crate::value::Value;
 
-pub struct CharacterChunk {
-    pub data: char,
-}
 
 
-impl StackChunk for CharacterChunk {
+
+impl StackChunk for char {
     fn get_value(self) -> Value {
-        Value::Character(self.data)
+        Value::Character(self)
+    }
+
+    fn get_boxed_value(self: Box<Self>) -> Value {
+        Value::Character(*self)
     }
 }

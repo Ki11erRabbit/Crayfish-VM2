@@ -1,5 +1,6 @@
 use std::fmt::{Debug, Display, Formatter};
 use malachite::Natural;
+use crate::stack::StackChunk;
 use crate::value::Reference;
 
 #[derive(Debug, Clone)]
@@ -60,6 +61,27 @@ pub enum Vector {
     Reference(*mut Reference, usize),
 }
 
+impl Vector {
+
+    pub fn into_chunk(self) -> Box<dyn StackChunk> {
+        match self {
+            Vector::U8(pointer, size) => Box::new((pointer, size)),
+            Vector::U16(pointer, size) => Box::new((pointer, size)),
+            Vector::U32(pointer, size) => Box::new((pointer, size)),
+            Vector::U64(pointer, size) => Box::new((pointer, size)),
+            Vector::I8(pointer, size) => Box::new((pointer, size)),
+            Vector::I16(pointer, size) => Box::new((pointer, size)),
+            Vector::I32(pointer, size) => Box::new((pointer, size)),
+            Vector::I64(pointer, size) => Box::new((pointer, size)),
+            Vector::F32(pointer, size) => Box::new((pointer, size)),
+            Vector::F64(pointer, size) => Box::new((pointer, size)),
+            Vector::Natural(pointer, size) => Box::new((pointer, size)),
+            Vector::Integer(pointer, size) => Box::new((pointer, size)),
+            Vector::Rational(pointer, size) => Box::new((pointer, size)),
+            Vector::Reference(pointer, size) => Box::new((pointer, size)),
+        }
+    }
+}
 
 impl Display for Vector {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -224,7 +246,7 @@ impl Display for Vector {
                 write!(f, "[")?;
                 for i in 0..*size {
                     unsafe {
-                        write!(f, "{:#x}", *pointer.offset(i as isize))?;
+                        write!(f, "{}", *pointer.offset(i as isize))?;
                     }
                     if i != *size - 1 {
                         write!(f, " ")?;

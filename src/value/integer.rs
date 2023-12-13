@@ -1,6 +1,8 @@
 use std::fmt::{Debug, Display};
+use std::ops::{Neg, Not};
 use malachite::Natural;
 use malachite::num::basic::traits::Zero;
+use crate::stack::StackChunk;
 use crate::value::{Value, ValueType};
 use crate::value::decimal::DecimalType;
 
@@ -100,6 +102,21 @@ impl Integer {
             Integer::Integer(value) => value < &malachite::Integer::ZERO,
         }
     }
+
+    pub fn into_chunk(self) -> Box<dyn StackChunk> {
+        match self {
+            Integer::U8(value) => Box::new(value),
+            Integer::U16(value) => Box::new(value),
+            Integer::U32(value) => Box::new(value),
+            Integer::U64(value) => Box::new(value),
+            Integer::I8(value) => Box::new(value),
+            Integer::I16(value) => Box::new(value),
+            Integer::I32(value) => Box::new(value),
+            Integer::I64(value) => Box::new(value),
+            Integer::Natural(value) => Box::new(value),
+            Integer::Integer(value) => Box::new(value),
+        }
+    }
 }
 
 macro_rules! generate_op {
@@ -160,6 +177,119 @@ generate_op!(BitXor, bitxor, ^);
 generate_shift!(Shl, shl, <<);
 generate_shift!(Shr, shr, >>);
 
+impl Neg for Integer {
+    type Output = Integer;
+
+    fn neg(self) -> Self::Output {
+        match self {
+            Integer::U8(value) => {
+                if value == 0 {
+                    Integer::U8(0)
+                } else {
+                    if value > 128 {
+                        Integer::I16(-(value as i16))
+                    } else {
+                        Integer::I8(-(value as i8))
+                    }
+                }
+            }
+            Integer::U16(value) => {
+                if value == 0 {
+                    Integer::U16(0)
+                } else {
+                    if value > 32768 {
+                        Integer::I32(-(value as i32))
+                    } else {
+                        Integer::I16(-(value as i16))
+                    }
+                }
+            }
+            Integer::U32(value) => {
+                if value == 0 {
+                    Integer::U32(0)
+                } else {
+                    if value > 2147483648 {
+                        Integer::I64(-(value as i64))
+                    } else {
+                        Integer::I32(-(value as i32))
+                    }
+                }
+            }
+            Integer::U64(value) => {
+                if value == 0 {
+                    Integer::U64(0)
+                } else {
+                    if value > 9223372036854775808 {
+                        Integer::Integer(-<u64 as Into<malachite::Integer>>::into(value))
+                    } else {
+                        Integer::I64(-(value as i64))
+                    }
+                }
+            }
+            Integer::I8(value) => {
+                if value == 0 {
+                    Integer::I8(0)
+                } else {
+                    Integer::I8(-value)
+                }
+            }
+            Integer::I16(value) => {
+                if value == 0 {
+                    Integer::I16(0)
+                } else {
+                    Integer::I16(-value)
+                }
+            }
+            Integer::I32(value) => {
+                if value == 0 {
+                    Integer::I32(0)
+                } else {
+                    Integer::I32(-value)
+                }
+            }
+            Integer::I64(value) => {
+                if value == 0 {
+                    Integer::I64(0)
+                } else {
+                    Integer::I64(-value)
+                }
+            }
+            Integer::Natural(value) => {
+                if value == Natural::ZERO {
+                    Integer::Natural(Natural::ZERO)
+                } else {
+                    Integer::Integer(-<Natural as Into<malachite::Integer>>::into(value))
+                }
+            }
+            Integer::Integer(value) => {
+                if value == malachite::Integer::ZERO {
+                    Integer::Integer(malachite::Integer::ZERO)
+                } else {
+                    Integer::Integer(-value)
+                }
+            }
+        }
+    }
+}
+
+impl Not for Integer {
+    type Output = Integer;
+
+    fn not(self) -> Self::Output {
+        match self {
+            Integer::U8(value) => Integer::U8(!value),
+            Integer::U16(value) => Integer::U16(!value),
+            Integer::U32(value) => Integer::U32(!value),
+            Integer::U64(value) => Integer::U64(!value),
+            Integer::I8(value) => Integer::I8(!value),
+            Integer::I16(value) => Integer::I16(!value),
+            Integer::I32(value) => Integer::I32(!value),
+            Integer::I64(value) => Integer::I64(!value),
+            Integer::Integer(value) => Integer::Integer(!value),
+            x => panic!("Cannot not {:?}", x),
+        }
+    }
+}
 
 
 macro_rules! generate_from_base {
@@ -211,6 +341,7 @@ impl From<Integer> for bool {
         !value.is_zero()
     }
 }
+
 
 
 

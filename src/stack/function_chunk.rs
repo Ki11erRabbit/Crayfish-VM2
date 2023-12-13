@@ -2,12 +2,14 @@ use crate::stack::StackChunk;
 use crate::value::function::Function;
 use crate::value::Value;
 
-pub struct FunctionChunk {
-    pub data: Function,
-}
 
-impl StackChunk for FunctionChunk {
+
+impl StackChunk for Function {
     fn get_value(self) -> Value {
-        Value::Function(self.data)
+        Value::Function(self)
+    }
+
+    fn get_boxed_value(self: Box<Self>) -> Value {
+        Value::Function(*self)
     }
 }

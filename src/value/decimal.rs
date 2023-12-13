@@ -1,5 +1,6 @@
 use std::fmt::{Debug, Display};
 use malachite::num::basic::traits::Zero;
+use crate::stack::StackChunk;
 use crate::value::integer::{Integer, IntegerType};
 use crate::value::{Value, ValueType};
 
@@ -60,6 +61,14 @@ impl Decimal {
             Decimal::F32(value) => *value < 0.0,
             Decimal::F64(value) => *value < 0.0,
             Decimal::Rational(value) => value < &malachite::Rational::ZERO,
+        }
+    }
+
+    pub fn into_chunk(self) -> Box<dyn StackChunk> {
+        match self {
+            Decimal::F32(value) => Box::new(value),
+            Decimal::F64(value) => Box::new(value),
+            Decimal::Rational(value) => Box::new(value),
         }
     }
 }

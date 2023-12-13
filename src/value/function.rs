@@ -1,5 +1,6 @@
 use std::fmt::{Debug, Display};
 use crate::instruction::Instruction;
+use crate::stack::StackChunk;
 
 #[derive(Clone)]
 pub struct Function {
@@ -7,6 +8,13 @@ pub struct Function {
     pub argument_names: Box<[Box<str>]>,
 }
 
+
+impl Function {
+
+    pub fn into_chunk(self) -> Box<dyn StackChunk> {
+        Box::new(self)
+    }
+}
 
 
 impl Display for Function {

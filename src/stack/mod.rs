@@ -8,39 +8,41 @@ pub mod function_chunk;
 pub mod reference_chunk;
 pub mod character_chunk;
 pub mod boolean_chunk;
+mod string_chunk;
 
 use std::cell::RefCell;
 use crate::value::Value;
 
 pub trait StackChunk {
     fn get_value(self) -> Value;
+    fn get_boxed_value(self: Box<Self>) -> Value;
 
 }
 
 
 
 
-pub struct Stack<'a> {
-    pub data: Vec<&'a dyn StackChunk>
+pub struct Stack {
+    pub data: Vec<Box<dyn StackChunk>>
 }
 
 
-impl<'a> Stack<'a> {
-    pub fn new() -> Stack<'a> {
+impl Stack {
+    pub fn new() -> Stack {
         Stack {
             data: Vec::new()
         }
     }
 
-    pub fn push(&'a mut self, chunk: &'a dyn StackChunk) {
+    pub fn push(& mut self, chunk: Box<dyn StackChunk>) {
         self.data.push(chunk);
     }
 
-    pub fn pop(&'a mut self) -> &'a dyn StackChunk {
+    pub fn pop(&mut self) -> Box<dyn StackChunk> {
         self.data.pop().expect("Stack is empty")
     }
 
-    pub fn peek(&'a self) -> &&'a dyn StackChunk {
+    pub fn peek(& self) -> &Box<dyn StackChunk> {
         self.data.last().expect("Stack is empty")
     }
 

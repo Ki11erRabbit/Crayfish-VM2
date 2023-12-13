@@ -2,13 +2,14 @@ use crate::stack::StackChunk;
 use crate::value::product::ProductType;
 use crate::value::Value;
 
-pub struct ProductChunk {
-    pub data: ProductType,
-}
 
 
-impl StackChunk for ProductChunk {
+impl StackChunk for ProductType {
     fn get_value(self) -> Value {
-        Value::Product(self.data)
+        Value::Product(self)
+    }
+
+    fn get_boxed_value(self: Box<Self>) -> Value {
+        Value::Product(*self)
     }
 }

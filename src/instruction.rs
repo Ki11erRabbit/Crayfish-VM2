@@ -180,7 +180,7 @@ pub enum RealInstruction {
     TupleNew(usize),
     TupleGet(usize),
     // Vector
-    VectorNew(usize),
+    VectorNew(usize, ValueType),
     VectorGet(usize),
     VectorSet(usize),
     VectorLength,
@@ -264,7 +264,7 @@ impl Display for RealInstruction {
             Pop => write!(f, "pop"),
             TupleNew(size) => write!(f, "tuple.new {}", size),
             TupleGet(index) => write!(f, "tuple.get {}", index),
-            VectorNew(size) => write!(f, "vector.new {}", size),
+            VectorNew(size, ty) => write!(f, "vector.new {} {}", size, ty),
             VectorGet(index) => write!(f, "vector.get {}", index),
             VectorSet(index) => write!(f, "vector.set {}", index),
             VectorLength => write!(f, "vector.length"),

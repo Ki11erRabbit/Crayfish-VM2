@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::fmt::{Debug, Display};
+use crate::stack::StackChunk;
 use crate::value::Value;
 
 #[derive(Clone)]
@@ -9,6 +10,13 @@ pub struct SumType {
     fields: HashMap<Box<str>, Value>
 }
 
+
+impl SumType {
+
+    pub fn into_chunk(self) -> Box<dyn StackChunk> {
+        Box::new(self)
+    }
+}
 
 impl Display for SumType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

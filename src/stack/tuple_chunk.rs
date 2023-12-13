@@ -2,13 +2,14 @@ use crate::stack::StackChunk;
 use crate::value::tuple::Tuple;
 use crate::value::Value;
 
-pub struct TupleChunk {
-    pub data: Tuple,
-}
 
 
-impl StackChunk for TupleChunk {
+impl StackChunk for Tuple {
     fn get_value(self) -> Value {
-        Value::Tuple(self.data)
+        Value::Tuple(self)
+    }
+
+    fn get_boxed_value(self: Box<Self>) -> Value {
+        Value::Tuple(*self)
     }
 }
