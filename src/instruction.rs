@@ -1,4 +1,5 @@
 use std::fmt::{Debug, Display, Formatter};
+use crate::program::StringTablePath;
 use crate::value::decimal::Decimal;
 use crate::value::integer::Integer;
 use crate::value::Value;
@@ -251,6 +252,8 @@ pub enum RealInstruction {
     // IO
     Write,
     Read,
+    // String Table
+    GetStringRef(StringTablePath, usize),
 }
 
 impl Display for RealInstruction {
@@ -322,6 +325,7 @@ impl Display for RealInstruction {
             GlobalLookup(name) => write!(f, "global_lookup {}", name),
             Write => write!(f, "write"),
             Read => write!(f, "read"),
+            GetStringRef(path, index) => write!(f, "get_string_ref {} {}", path, index),
         }
     }
 }
