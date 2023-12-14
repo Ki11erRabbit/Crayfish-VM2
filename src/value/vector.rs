@@ -1,6 +1,7 @@
 use std::fmt::{Debug, Display, Formatter};
 use malachite::Natural;
 use crate::stack::StackChunk;
+use crate::stack::vector_chunk::{F32Vector, F64Vector, I16Vector, I32Vector, I64Vector, I8Vector, IntegerVector, NaturalVector, RationalVector, ReferenceVector, U16Vector, U32Vector, U64Vector, U8Vector};
 use crate::value::Reference;
 
 #[derive(Debug, Clone)]
@@ -65,20 +66,20 @@ impl Vector {
 
     pub fn into_chunk(self) -> Box<dyn StackChunk> {
         match self {
-            Vector::U8(pointer, size) => Box::new((pointer, size)),
-            Vector::U16(pointer, size) => Box::new((pointer, size)),
-            Vector::U32(pointer, size) => Box::new((pointer, size)),
-            Vector::U64(pointer, size) => Box::new((pointer, size)),
-            Vector::I8(pointer, size) => Box::new((pointer, size)),
-            Vector::I16(pointer, size) => Box::new((pointer, size)),
-            Vector::I32(pointer, size) => Box::new((pointer, size)),
-            Vector::I64(pointer, size) => Box::new((pointer, size)),
-            Vector::F32(pointer, size) => Box::new((pointer, size)),
-            Vector::F64(pointer, size) => Box::new((pointer, size)),
-            Vector::Natural(pointer, size) => Box::new((pointer, size)),
-            Vector::Integer(pointer, size) => Box::new((pointer, size)),
-            Vector::Rational(pointer, size) => Box::new((pointer, size)),
-            Vector::Reference(pointer, size) => Box::new((pointer, size)),
+            Vector::U8(pointer, size) => Box::new(U8Vector(pointer, size)),
+            Vector::U16(pointer, size) => Box::new(U16Vector(pointer, size)),
+            Vector::U32(pointer, size) => Box::new(U32Vector(pointer, size)),
+            Vector::U64(pointer, size) => Box::new(U64Vector(pointer, size)),
+            Vector::I8(pointer, size) => Box::new(I8Vector(pointer, size)),
+            Vector::I16(pointer, size) => Box::new(I16Vector(pointer, size)),
+            Vector::I32(pointer, size) => Box::new(I32Vector(pointer, size)),
+            Vector::I64(pointer, size) => Box::new(I64Vector(pointer, size)),
+            Vector::F32(pointer, size) => Box::new(F32Vector(pointer, size)),
+            Vector::F64(pointer, size) => Box::new(F64Vector(pointer, size)),
+            Vector::Natural(pointer, size) => Box::new(NaturalVector(pointer, size)),
+            Vector::Integer(pointer, size) => Box::new(IntegerVector(pointer, size)),
+            Vector::Rational(pointer, size) => Box::new(RationalVector(pointer, size)),
+            Vector::Reference(pointer, size) => Box::new(ReferenceVector(pointer, size)),
         }
     }
 }

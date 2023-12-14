@@ -11,6 +11,16 @@ pub struct Instruction {
     pub instruction: RealInstruction,
 }
 
+impl Instruction {
+    pub fn new(instruction: RealInstruction) -> Self {
+        Instruction {
+            row: 0,
+            column: 0,
+            instruction,
+        }
+    }
+}
+
 impl Display for Instruction {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{} @ {}:{}", self.instruction, self.row, self.column)
@@ -103,9 +113,6 @@ pub enum Condition {
     /// When the last instruction resulted in a non-zero result.
     NotZero,
     /// When the last instruction resulted in a carry result.
-    Carry,
-    /// When the last instruction resulted in a non-carry result.
-    NotCarry,
     /// When the last instruction resulted in a negative result.
     Negative,
     /// When the last instruction resulted in a non-negative result.
@@ -125,8 +132,6 @@ impl Display for Condition {
             LessThanOrEqual => write!(f, "less_than_or_equal"),
             Zero => write!(f, "zero"),
             NotZero => write!(f, "not_zero"),
-            Carry => write!(f, "carry"),
-            NotCarry => write!(f, "not_carry"),
             Negative => write!(f, "negative"),
             NotNegative => write!(f, "not_negative"),
         }
@@ -176,6 +181,8 @@ pub enum RealInstruction {
     // Stack
     Push(Value),
     Pop,
+    // Duplicate
+    Duplicate,
     // Tuple
     TupleNew(usize),
     TupleGet(usize),
@@ -193,8 +200,8 @@ pub enum RealInstruction {
     SumGet(Box<str>),
     SumSet(Box<str>),
     // Function
-    FunctionCall(FunctionSource),
-    Return,
+    FunctionCall(FunctionSource, Condition),
+    Return(Condition),
     // Reference
     ReferenceNew,
     ReferenceGet,
@@ -262,6 +269,7 @@ impl Display for RealInstruction {
             NoOp => write!(f, "noop"),
             Push(value) => write!(f, "push {}", value),
             Pop => write!(f, "pop"),
+            Duplicate => write!(f, "duplicate"),
             TupleNew(size) => write!(f, "tuple.new {}", size),
             TupleGet(index) => write!(f, "tuple.get {}", index),
             VectorNew(size, ty) => write!(f, "vector.new {} {}", size, ty),
@@ -274,8 +282,8 @@ impl Display for RealInstruction {
             SumNew(name) => write!(f, "sum.new {}", name),
             SumGet(name) => write!(f, "sum.get {}", name),
             SumSet(name) => write!(f, "sum.set {}", name),
-            FunctionCall(source) => write!(f, "function.call {}", source),
-            Return => write!(f, "return"),
+            FunctionCall(source, condition) => write!(f, "function.call {} when {}", source, condition),
+            Return(condition) => write!(f, "return when {}", condition),
             ReferenceNew => write!(f, "reference.new"),
             ReferenceGet => write!(f, "reference.get"),
             ReferenceSet => write!(f, "reference.set"),

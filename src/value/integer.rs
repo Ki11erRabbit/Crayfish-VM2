@@ -1,6 +1,7 @@
 use std::fmt::{Debug, Display};
 use std::ops::{Neg, Not};
 use malachite::Natural;
+use malachite::num::arithmetic::traits::Pow;
 use malachite::num::basic::traits::Zero;
 use crate::stack::StackChunk;
 use crate::value::{Value, ValueType};
@@ -38,7 +39,7 @@ impl Display for IntegerType {
 }
 
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone)]
 pub enum Integer {
     U8(u8),
     U16(u16),
@@ -158,7 +159,7 @@ macro_rules! generate_shift {
                     (Integer::I16(left), Integer::I16(right)) => Integer::I16(left $op right),
                     (Integer::I32(left), Integer::I32(right)) => Integer::I32(left $op right),
                     (Integer::I64(left), Integer::I64(right)) => Integer::I64(left $op right),
-                    (x, y) => panic!("Cannot add {:?} and {:?}", x, y),
+                    (x, y) => panic!("Cannot perform op with {:?} and {:?}", x, y),
                 }
             }
         }
@@ -176,6 +177,27 @@ generate_op!(BitOr, bitor, |);
 generate_op!(BitXor, bitxor, ^);
 generate_shift!(Shl, shl, <<);
 generate_shift!(Shr, shr, >>);
+
+impl Pow<Integer> for Integer {
+    type Output = Self;
+
+    fn pow(self, rhs: Integer) -> Self::Output {
+        match (self, rhs) {
+            (Integer::U8(left), Integer::U32(right)) => Integer::U8(left.pow(right)),
+            (Integer::U16(left), Integer::U32(right)) => Integer::U16(left.pow(right)),
+            (Integer::U32(left), Integer::U32(right)) => Integer::U32(left.pow(right)),
+            (Integer::U64(left), Integer::U32(right)) => Integer::U64(left.pow(right)),
+            (Integer::I8(left), Integer::U32(right)) => Integer::I8(left.pow(right)),
+            (Integer::I16(left), Integer::U32(right)) => Integer::I16(left.pow(right)),
+            (Integer::I32(left), Integer::U32(right)) => Integer::I32(left.pow(right)),
+            (Integer::I64(left), Integer::U32(right)) => Integer::I64(left.pow(right)),
+            (Integer::Natural(left), Integer::U64(right)) => Integer::Natural(left.pow(right)),
+            (Integer::Integer(left), Integer::U64(right)) => Integer::Integer(left.pow(right)),
+            (x, y) => panic!("Cannot pow {:?} and {:?}", x, y),
+        }
+    }
+
+}
 
 impl Neg for Integer {
     type Output = Integer;
@@ -287,6 +309,43 @@ impl Not for Integer {
             Integer::I64(value) => Integer::I64(!value),
             Integer::Integer(value) => Integer::Integer(!value),
             x => panic!("Cannot not {:?}", x),
+        }
+    }
+}
+
+
+impl PartialEq<Integer> for Integer {
+    fn eq(&self, other: &Integer) -> bool {
+        match (self, other) {
+            (Integer::U8(left), Integer::U8(right)) => left == right,
+            (Integer::U16(left), Integer::U16(right)) => left == right,
+            (Integer::U32(left), Integer::U32(right)) => left == right,
+            (Integer::U64(left), Integer::U64(right)) => left == right,
+            (Integer::I8(left), Integer::I8(right)) => left == right,
+            (Integer::I16(left), Integer::I16(right)) => left == right,
+            (Integer::I32(left), Integer::I32(right)) => left == right,
+            (Integer::I64(left), Integer::I64(right)) => left == right,
+            (Integer::Natural(left), Integer::Natural(right)) => left == right,
+            (Integer::Integer(left), Integer::Integer(right)) => left == right,
+            (x, y) => panic!("Cannot compare {:?} and {:?}", x, y),
+        }
+    }
+}
+
+impl PartialOrd<Integer> for Integer {
+    fn partial_cmp(&self, other: &Integer) -> Option<std::cmp::Ordering> {
+        match (self, other) {
+            (Integer::U8(left), Integer::U8(right)) => left.partial_cmp(right),
+            (Integer::U16(left), Integer::U16(right)) => left.partial_cmp(right),
+            (Integer::U32(left), Integer::U32(right)) => left.partial_cmp(right),
+            (Integer::U64(left), Integer::U64(right)) => left.partial_cmp(right),
+            (Integer::I8(left), Integer::I8(right)) => left.partial_cmp(right),
+            (Integer::I16(left), Integer::I16(right)) => left.partial_cmp(right),
+            (Integer::I32(left), Integer::I32(right)) => left.partial_cmp(right),
+            (Integer::I64(left), Integer::I64(right)) => left.partial_cmp(right),
+            (Integer::Natural(left), Integer::Natural(right)) => left.partial_cmp(right),
+            (Integer::Integer(left), Integer::Integer(right)) => left.partial_cmp(right),
+            (x, y) => panic!("Cannot compare {:?} and {:?}", x, y),
         }
     }
 }

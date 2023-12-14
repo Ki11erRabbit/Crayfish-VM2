@@ -21,7 +21,7 @@ impl Display for DecimalType {
     }
 }
 
-#[derive(Clone, PartialEq, PartialOrd)]
+#[derive(Clone)]
 pub enum Decimal {
     F32(f32),
     F64(f64),
@@ -163,6 +163,28 @@ impl std::ops::Neg for Decimal {
         }
     }
 
+}
+
+impl PartialEq<Decimal> for Decimal {
+    fn eq(&self, other: &Decimal) -> bool {
+        match (self, other) {
+            (Decimal::F32(left), Decimal::F32(right)) => left == right,
+            (Decimal::F64(left), Decimal::F64(right)) => left == right,
+            (Decimal::Rational(left), Decimal::Rational(right)) => left == right,
+            (x, y) => panic!("Cannot compare {:?} and {:?}", x, y),
+        }
+    }
+}
+
+impl PartialOrd<Decimal> for Decimal {
+    fn partial_cmp(&self, other: &Decimal) -> Option<std::cmp::Ordering> {
+        match (self, other) {
+            (Decimal::F32(left), Decimal::F32(right)) => left.partial_cmp(right),
+            (Decimal::F64(left), Decimal::F64(right)) => left.partial_cmp(right),
+            (Decimal::Rational(left), Decimal::Rational(right)) => left.partial_cmp(right),
+            (x, y) => panic!("Cannot compare {:?} and {:?}", x, y),
+        }
+    }
 }
 
 impl From<u8> for Decimal {

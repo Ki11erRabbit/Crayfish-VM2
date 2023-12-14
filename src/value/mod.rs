@@ -106,6 +106,44 @@ impl Value {
     }
 }
 
+impl PartialEq for Value {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Value::String(string), Value::String(other_string)) => string == other_string,
+            (Value::Integer(integer), Value::Integer(other_integer)) => integer == other_integer,
+            (Value::Decimal(decimal), Value::Decimal(other_decimal)) => decimal == other_decimal,
+            (Value::Vector(vector), Value::Vector(other_vector)) => todo!("Vector equality"),
+            (Value::Product(product), Value::Product(other_product)) => todo!("Product equality"),
+            (Value::Sum(sum), Value::Sum(other_sum)) => todo!("Sum equality"),
+            (Value::Function(function), Value::Function(other_function)) => todo!("Function equality"),
+            (Value::Reference(reference), Value::Reference(other_reference)) => todo!("Reference equality"),
+            (Value::Tuple(tuple), Value::Tuple(other_tuple)) => todo!("Tuple equality"),
+            (Value::Character(character), Value::Character(other_character)) => character == other_character,
+            (Value::Boolean(boolean), Value::Boolean(other_boolean)) => boolean == other_boolean,
+            _ => false,
+        }
+    }
+}
+
+impl PartialOrd for Value {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        match (self, other) {
+            (Value::String(string), Value::String(other_string)) => string.partial_cmp(other_string),
+            (Value::Integer(integer), Value::Integer(other_integer)) => integer.partial_cmp(other_integer),
+            (Value::Decimal(decimal), Value::Decimal(other_decimal)) => decimal.partial_cmp(other_decimal),
+            (Value::Vector(vector), Value::Vector(other_vector)) => todo!(),
+            (Value::Product(product), Value::Product(other_product)) => todo!(),
+            (Value::Sum(sum), Value::Sum(other_sum)) => todo!(),
+            (Value::Function(function), Value::Function(other_function)) => todo!(),
+            (Value::Reference(reference), Value::Reference(other_reference)) => todo!(),
+            (Value::Tuple(tuple), Value::Tuple(other_tuple)) => todo!(),
+            (Value::Character(character), Value::Character(other_character)) => character.partial_cmp(other_character),
+            (Value::Boolean(boolean), Value::Boolean(other_boolean)) => boolean.partial_cmp(other_boolean),
+            _ => None,
+        }
+    }
+}
+
 
 impl Display for Value {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

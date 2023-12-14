@@ -11,4 +11,5 @@ impl StackChunk for bool {
     fn get_boxed_value(self: Box<Self>) -> Value {
         Value::Boolean(*self)
     }
+
 }

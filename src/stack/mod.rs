@@ -11,11 +11,13 @@ pub mod boolean_chunk;
 mod string_chunk;
 
 use std::cell::RefCell;
+use std::fmt::Display;
 use crate::value::Value;
 
-pub trait StackChunk {
+pub trait StackChunk:Display {
     fn get_value(self) -> Value;
     fn get_boxed_value(self: Box<Self>) -> Value;
+
 
 }
 
@@ -52,5 +54,15 @@ impl Stack {
 
     pub fn is_empty(&self) -> bool {
         self.data.is_empty()
+    }
+}
+
+impl Display for Stack {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut stack = String::new();
+        for chunk in self.data.iter() {
+            stack.push_str(&format!("{}, \n", chunk));
+        }
+        write!(f, "{}", stack)
     }
 }

@@ -1,3 +1,5 @@
+pub mod module;
+
 use std::fmt::{Debug, Display};
 
 #[derive(Clone,Eq, Hash, PartialEq)]
@@ -77,10 +79,12 @@ impl Debug for FunctionPath {
     }
 }
 
-impl Into<FunctionPath> for &str {
-    fn into(self) -> FunctionPath {
+
+
+impl From<&str> for FunctionPath {
+    fn from(s: &str) -> Self {
         FunctionPath {
-            path: self.split("::").map(|s| s.into()).collect::<Vec<Box<str>>>().into_boxed_slice()
+            path: s.split("::").map(|s| s.into()).collect::<Vec<Box<str>>>().into_boxed_slice()
         }
     }
 }

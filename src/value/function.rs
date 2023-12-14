@@ -11,6 +11,17 @@ pub struct Function {
 
 impl Function {
 
+    pub fn new(code: Box<[Instruction]>, argument_names: Box<[Box<str>]>) -> Self {
+        Function {
+            code,
+            argument_names,
+        }
+    }
+
+    pub fn get_instruction(&self, index: usize) -> &Instruction {
+        &self.code[index]
+    }
+
     pub fn into_chunk(self) -> Box<dyn StackChunk> {
         Box::new(self)
     }
