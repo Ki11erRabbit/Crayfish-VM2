@@ -1,5 +1,5 @@
 use std::fmt::{Debug, Display, Formatter};
-use crate::program::StringTablePath;
+use crate::program::{FunctionPath, StringTablePath};
 use crate::value::decimal::Decimal;
 use crate::value::integer::Integer;
 use crate::value::{Value, ValueType};
@@ -35,8 +35,8 @@ impl Debug for Instruction {
 
 #[derive(Clone)]
 pub enum FunctionSource {
-    Name(Box<str>),
-    Address(u64),
+    Name(FunctionPath),
+    Address,
     Stack,
 }
 
@@ -45,7 +45,7 @@ impl Display for FunctionSource {
         use FunctionSource::*;
         match self {
             Name(name) => write!(f, "name: {}", name),
-            Address(address) => write!(f, "address: {:#x}", address),
+            Address => write!(f, "address"),
             Stack => write!(f, "stack"),
         }
     }

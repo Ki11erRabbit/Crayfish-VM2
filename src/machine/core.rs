@@ -1,7 +1,10 @@
 use std::collections::HashMap;
+use std::sync::Arc;
 use malachite::num::arithmetic::traits::Pow;
-use crate::instruction::{ComparisonType, Condition, Instruction, JumpTarget, RealInstruction};
+use crate::instruction::{ComparisonType, Condition, FunctionSource, Instruction, JumpTarget, RealInstruction};
 use crate::machine::{Fault, InstructionResult};
+use crate::machine::environment::Environment;
+use crate::program::module::Module;
 use crate::stack::Stack;
 use crate::value::Value;
 
@@ -80,10 +83,11 @@ impl Core {
         }
     }
 
-    pub fn execute_instruction(& mut self,
+    pub fn execute_instruction<'a>(&'a mut self,
                                instruction: &Instruction,
                                program_counter: &mut usize,
-                               environment: &mut HashMap<Box<str>, Value>) -> Result<InstructionResult, Fault> {
+                               environment: &mut Environment,
+                               module: &'a Module) -> Result<InstructionResult<'a>, Fault> {
         //println!("Executing instruction: {}", instruction);
         //println!("Stack: {}", self.stack);
 
@@ -133,6 +137,7 @@ impl Core {
             Compare(comparison_type) => self.compare(comparison_type)?,
             Goto(target, condition) => return self.goto(target, condition, program_counter),
             Return(condition) => return self.return_instruction(condition, program_counter),
+            FunctionCall(source, condition) => return self.function_call(source, condition, program_counter, module),
 
             x => panic!("Unimplemented instruction: {:?}", x),
         }
@@ -387,6 +392,53 @@ impl Core {
     fn return_instruction(&mut self, condition: &Condition, program_counter: &mut usize) -> Result<InstructionResult, Fault> {
         if self.can_jump(condition) {
             return Ok(InstructionResult::Return);
+        }
+        *program_counter += 1;
+        Ok(InstructionResult::Continue)
+    }
+
+    fn function_call<'a>(&'a mut self,
+                     source: &FunctionSource,
+                     condition: &Condition,
+                     program_counter: &mut usize,
+                     module: &'a Module) -> Result<InstructionResult<'a>, Fault> {
+        if self.can_jump(condition) {
+            match source {
+                FunctionSource::Name(name) => {
+                    let function = module.get_function(name)
+                        .ok_or(Fault::FunctionNotFound(name.clone()))?;
+                    let mut environment = Environment::new();
+                    for (i, parameter) in function.argument_names.iter().enumerate() {
+                        let value = self.stack.pop();
+                        environment.insert(parameter.clone(), value.get_boxed_value());
+                    }
+                    return Ok(InstructionResult::CallRef(function, environment));
+                }
+                FunctionSource::Address => {
+                    let reference = self.stack.pop().get_boxed_value();
+                    match reference {
+                        Value::Reference(_reference) => {
+
+                            todo!("Implement function call by address");
+                        }
+                        _ => return Err(Fault::NotAReference),
+                    }
+                }
+                FunctionSource::Stack => {
+                    let function = self.stack.pop().get_boxed_value();
+                    match function {
+                        Value::Function(function) => {
+                            let mut environment = Environment::new();
+                            for (i, parameter) in function.argument_names.iter().enumerate() {
+                                let value = self.stack.pop();
+                                environment.insert(parameter.clone(), value.get_boxed_value());
+                            }
+                            return Ok(InstructionResult::Call(function, environment));
+                        }
+                        _ => return Err(Fault::NotAFunction),
+                    }
+                }
+            }
         }
         *program_counter += 1;
         Ok(InstructionResult::Continue)

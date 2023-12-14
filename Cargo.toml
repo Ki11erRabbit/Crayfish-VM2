@@ -11,3 +11,4 @@ lto = true
 
 [dependencies]
 malachite = "0.4.4"
+fxhash = "0.2.1"
