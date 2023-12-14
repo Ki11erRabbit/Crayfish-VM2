@@ -83,7 +83,7 @@ impl Core {
         }
     }
 
-    pub fn execute_instruction<'a>(&'a mut self,
+    pub fn execute_instruction<'a>(&mut self,
                                instruction: &Instruction,
                                program_counter: &mut usize,
                                environment: &mut Environment,
@@ -373,7 +373,7 @@ impl Core {
         }
     }
 
-    fn goto(&mut self, target: &JumpTarget, condition: &Condition, program_counter: &mut usize) -> Result<InstructionResult, Fault> {
+    fn goto<'a>(&mut self, target: &JumpTarget, condition: &Condition, program_counter: &mut usize) -> Result<InstructionResult<'a>, Fault> {
         if self.can_jump(condition) {
             match target {
                 JumpTarget::Relative(offset) => {
@@ -389,7 +389,7 @@ impl Core {
         Ok(InstructionResult::Continue)
     }
 
-    fn return_instruction(&mut self, condition: &Condition, program_counter: &mut usize) -> Result<InstructionResult, Fault> {
+    fn return_instruction<'a>(&mut self, condition: &Condition, program_counter: &mut usize) -> Result<InstructionResult<'a>, Fault> {
         if self.can_jump(condition) {
             return Ok(InstructionResult::Return);
         }
@@ -397,7 +397,7 @@ impl Core {
         Ok(InstructionResult::Continue)
     }
 
-    fn function_call<'a>(&'a mut self,
+    fn function_call<'a>(&mut self,
                      source: &FunctionSource,
                      condition: &Condition,
                      program_counter: &mut usize,

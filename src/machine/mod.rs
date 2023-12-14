@@ -69,7 +69,7 @@ pub fn call_main(core: &mut Core, module: Arc<Module>) -> Result<(), Fault> {
 
 
 
-fn call_function<'a>(core: &'a mut Core,
+fn call_function<'a>(core: &mut Core,
                  module: Arc<Module>,
                  function: &Function,
                  mut environment: Environment) -> Result<InstructionResult<'a>,Fault> {
@@ -78,13 +78,15 @@ fn call_function<'a>(core: &'a mut Core,
 
     loop {
 
-        loop {
-            match core.execute_instruction(instruction, &mut program_counter, &mut environment, &module)? {
+        let mut result = core.execute_instruction(instruction, &mut program_counter, &mut environment, &module)?;
+        'check_result: loop {
+            match result {
                 InstructionResult::Stop => {
                     return Ok(InstructionResult::Stop)
                 }
                 InstructionResult::Continue => {
                     instruction = function.get_instruction(program_counter);
+                    break 'check_result;
                 }
                 InstructionResult::Return => {
                     return Ok(InstructionResult::Continue)
@@ -93,10 +95,10 @@ fn call_function<'a>(core: &'a mut Core,
                     todo!("Add exn handling code")
                 }
                 InstructionResult::Call(function, environment) => {
-                    todo!("Add code for calling a function")
+                    result = call_function(core, module.clone(), &function, environment)?;
                 }
                 InstructionResult::CallRef(function, environment) => {
-                    todo!("Add code for calling a function")
+                    result = call_function(core, module.clone(), function, environment)?;
                 }
             }
 

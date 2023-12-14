@@ -1,10 +1,12 @@
 use std::sync::Arc;
 use malachite::Natural;
-use crate::instruction::{ComparisonType, Condition, Instruction, JumpTarget};
+use crate::instruction::{ComparisonType, Condition, FunctionSource, Instruction, JumpTarget};
 use crate::machine::call_main;
 use crate::machine::core::Core;
+use crate::program::FunctionPath;
 use crate::program::module::Module;
 use crate::value::function::Function;
+use crate::value::integer::Integer;
 
 pub mod value;
 pub mod instruction;
@@ -49,12 +51,53 @@ fn dp_fib() -> Function {
     Function::new(instructions, Box::new([]))
 }
 
+fn rec_fib() -> Function {
+    let one: u64 = 1;
+    use instruction::RealInstruction::*;
+    let instructions = Box::new([
+        Instruction::new(Lookup("n".to_string().into())),
+        Instruction::new(IntegerNew(Integer::Natural(malachite::Natural::from(one).into()))),
+        Instruction::new(Compare(ComparisonType::LessThanOrEqual)),
+        Instruction::new(Goto(JumpTarget::Relative(3), Condition::GreaterThan)),
+        Instruction::new(Pop),
+        Instruction::new(Return(Condition::Always)),
+        Instruction::new(Pop),
+        Instruction::new(IntegerNew(Integer::Natural(malachite::Natural::from(one).into()))),
+        Instruction::new(IntegerSubtract),
+        Instruction::new(Store("n".to_string().into())),
+        Instruction::new(Lookup("n".to_string().into())),
+        Instruction::new(FunctionCall(FunctionSource::Name(<&str as Into<FunctionPath>>::into("fib")), Condition::Always)),
+        Instruction::new(Lookup("n".to_string().into())),
+        Instruction::new(IntegerNew(Integer::Natural(malachite::Natural::from(one).into()))),
+        Instruction::new(IntegerSubtract),
+        Instruction::new(FunctionCall(FunctionSource::Name(<&str as Into<FunctionPath>>::into("fib")), Condition::Always)),
+        Instruction::new(IntegerAdd),
+        Instruction::new(Return(Condition::Always)),
+    ]);
+
+    Function::new(instructions, Box::new(["n".to_string().into_boxed_str()]))
+}
+
+fn rec_fib_main() -> Function {
+    let ten: u64 = 10;
+    use instruction::RealInstruction::*;
+    let instructions = Box::new([
+        Instruction::new(IntegerNew(Integer::Natural(malachite::Natural::from(ten).into()))),
+        Instruction::new(FunctionCall(FunctionSource::Name(<&str as Into<FunctionPath>>::into("fib")), Condition::Always)),
+        Instruction::new(Return(Condition::Always)),
+    ]);
+
+    Function::new(instructions, Box::new([]))
+}
+
 
 
 fn main() {
     let mut module = Module::default();
 
     module.add_function("main", dp_fib());
+    module.add_function("fib", rec_fib());
+    module.add_function("main", rec_fib_main());
 
     let mut core = Core::new();
 
