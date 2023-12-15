@@ -88,8 +88,8 @@ impl Core {
                                program_counter: &mut usize,
                                environment: &mut Environment,
                                module: &'a Module) -> Result<InstructionResult<'a>, Fault> {
-        //println!("Executing instruction: {}", instruction);
-        //println!("Stack: {}", self.stack);
+        println!("Executing instruction: {}", instruction);
+        println!("Stack: {}", self.stack);
 
         use RealInstruction::*;
         match &instruction.instruction {
@@ -402,6 +402,8 @@ impl Core {
                      condition: &Condition,
                      program_counter: &mut usize,
                      module: &'a Module) -> Result<InstructionResult<'a>, Fault> {
+
+        *program_counter += 1;
         if self.can_jump(condition) {
             match source {
                 FunctionSource::Name(name) => {
@@ -440,7 +442,6 @@ impl Core {
                 }
             }
         }
-        *program_counter += 1;
         Ok(InstructionResult::Continue)
     }
 
