@@ -10,6 +10,7 @@ use crate::stack::{Stack, StackChunk};
 use crate::value::{Value, ValueType};
 use crate::value::decimal::DecimalType;
 use crate::value::integer::IntegerType;
+use crate::value::tuple::Tuple;
 use crate::value::vector::{Vector, VectorType};
 
 
@@ -193,6 +194,13 @@ impl Core {
             BooleanAnd => self.boolean_and()?,
             BooleanOr => self.boolean_or()?,
             BooleanNot => self.boolean_not()?,
+            VectorNew(typ) => self.vector_new(typ)?,
+            VectorGet => self.vector_get()?,
+            VectorSet => self.vector_set()?,
+            VectorLength => self.vector_length()?,
+            TupleNew => self.tuple_new()?,
+            TupleGet => self.tuple_get()?,
+            ClosureNew(source) => self.closure_new(source, module, environment)?,
 
             x => panic!("Unimplemented instruction: {:?}", x),
         }
@@ -545,137 +553,21 @@ impl Core {
         Ok(())
     }
 
-    fn vector_new(&mut self, size: usize, typ: &ValueType) -> Result<(), Fault> {
-        let vec = match typ {
-            ValueType::Integer(int_type) => {
-                let layout = int_type.get_array_layout(size);
-                let pointer = unsafe { std::alloc::alloc(layout) };
-                if pointer.is_null() {
-                    return Err(Fault::OutOfMemory);
-                }
+    fn vector_new(&mut self, typ: &VectorType) -> Result<(), Fault> {
 
-                let vec = match int_type {
-                    IntegerType::U8 => Vector::U8(pointer, size),
-                    IntegerType::U16 => Vector::U16(pointer as *mut u16, size),
-                    IntegerType::U32 => Vector::U32(pointer as *mut u32, size),
-                    IntegerType::U64 => Vector::U64(pointer as *mut u64, size),
-                    IntegerType::I8 => Vector::I8(pointer as *mut i8, size),
-                    IntegerType::I16 => Vector::I16(pointer as *mut i16, size),
-                    IntegerType::I32 => Vector::I32(pointer as *mut i32, size),
-                    IntegerType::I64 => Vector::I64(pointer as *mut i64, size),
-                    IntegerType::Natural => Vector::Natural(pointer as *mut malachite::Natural, size),
-                    IntegerType::Integer => Vector::Integer(pointer as *mut malachite::Integer, size),
-                };
-
-                vec
-            }
-            ValueType::Decimal(dec_type) => {
-                let layout = dec_type.get_array_layout(size);
-                let pointer = unsafe { std::alloc::alloc(layout) };
-                if pointer.is_null() {
-                    return Err(Fault::OutOfMemory);
-                }
-
-                let vec = match dec_type {
-                    DecimalType::F32 => Vector::F32(pointer as *mut f32, size),
-                    DecimalType::F64 => Vector::F64(pointer as *mut f64, size),
-                    DecimalType::Rational => Vector::Rational(pointer as *mut malachite::Rational, size),
-                };
-
-                vec
-            }
-            ValueType::Vector(vec_type) => {
-                let layout = Layout::array::<Vector>(size).unwrap();
-                let pointer = unsafe { std::alloc::alloc(layout) } as *mut Vector;
-                if pointer.is_null() {
-                    return Err(Fault::OutOfMemory);
-                }
-
-                Self::build_vector_of_vectors(pointer, size, vec_type)?;
-
-                Vector::Vector(pointer, size)
-            }
-            _ => unimplemented!("Vector type: {:?}", typ),
+        let size = self.stack.pop().get_boxed_value();
+        let size = match size {
+            Value::Integer(size) => size.to_usize().unwrap(),
+            _ => return Err(Fault::NotAnInteger),
         };
+
+        let mut vec = Vector::new(size, typ);
 
         self.stack.push(vec.into_chunk());
 
         Ok(())
     }
 
-    fn build_vector_of_vectors(mut pointer: *mut Vector, pointer_size: usize, vec_type: &VectorType) -> Result<(), Fault> {
-        match vec_type {
-            VectorType::Vector(vec_type, size) => {
-                let layout = vec_type.get_array_layout(*size);
-                for _ in 0..pointer_size {
-                    let new_pointer = unsafe { std::alloc::alloc(layout) } as *mut Vector;
-                    if new_pointer.is_null() {
-                        return Err(Fault::OutOfMemory);
-                    }
-
-                    Self::build_vector_of_vectors(new_pointer, *size, vec_type)?;
-
-                    unsafe { std::ptr::write(pointer, Vector::Vector(new_pointer, *size)) };
-                    pointer = unsafe { pointer.add(1) };
-                }
-            }
-            x => {
-                for _ in 0..pointer_size {
-                    let new_pointer = unsafe { std::alloc::alloc(x.get_layout()) };
-                    if new_pointer.is_null() {
-                        return Err(Fault::OutOfMemory);
-                    }
-
-                    match x {
-                        VectorType::U8(size) => {
-                            unsafe { std::ptr::write(pointer, Vector::U8(new_pointer as *mut u8, *size)) };
-                        }
-                        VectorType::U16(size) => {
-                            unsafe { std::ptr::write(pointer, Vector::U16(new_pointer as *mut u16, *size)) };
-                        }
-                        VectorType::U32(size) => {
-                            unsafe { std::ptr::write(pointer, Vector::U32(new_pointer as *mut u32, *size)) };
-                        }
-                        VectorType::U64(size) => {
-                            unsafe { std::ptr::write(pointer, Vector::U64(new_pointer as *mut u64, *size)) };
-                        }
-                        VectorType::I8(size) => {
-                            unsafe { std::ptr::write(pointer, Vector::I8(new_pointer as *mut i8, *size)) };
-                        }
-                        VectorType::I16(size) => {
-                            unsafe { std::ptr::write(pointer, Vector::I16(new_pointer as *mut i16, *size)) };
-                        }
-                        VectorType::I32(size) => {
-                            unsafe { std::ptr::write(pointer, Vector::I32(new_pointer as *mut i32, *size)) };
-                        }
-                        VectorType::I64(size) => {
-                            unsafe { std::ptr::write(pointer, Vector::I64(new_pointer as *mut i64, *size)) };
-                        }
-                        VectorType::Natural(size) => {
-                            unsafe { std::ptr::write(pointer, Vector::Natural(new_pointer as *mut malachite::Natural, *size)) };
-                        }
-                        VectorType::Integer(size) => {
-                            unsafe { std::ptr::write(pointer, Vector::Integer(new_pointer as *mut malachite::Integer, *size)) };
-                        }
-                        VectorType::F32(size) => {
-                            unsafe { std::ptr::write(pointer, Vector::F32(new_pointer as *mut f32, *size)) };
-                        }
-                        VectorType::F64(size) => {
-                            unsafe { std::ptr::write(pointer, Vector::F64(new_pointer as *mut f64, *size)) };
-                        }
-                        VectorType::Rational(size) => {
-                            unsafe { std::ptr::write(pointer, Vector::Rational(new_pointer as *mut malachite::Rational, *size)) };
-                        }
-                        VectorType::Vector(_, _) => unreachable!(),
-                        z => unreachable!("{:?}", z),
-                    }
-                    pointer = unsafe { pointer.add(1) };
-                }
-
-            }
-        }
-        Ok(())
-    }
 
     fn vector_get(&mut self) -> Result<(), Fault> {
         let index = self.stack.pop().get_boxed_value();
@@ -707,14 +599,69 @@ impl Core {
         Ok(())
     }
 
-    fn vector_free(&mut self) -> Result<(), Fault> {
+    fn vector_length(&mut self) -> Result<(), Fault> {
         let vector = self.stack.pop().get_boxed_value();
         match vector {
             Value::Vector(vector) => {
-                vector.free();
+                let length = vector.length();
+                let chunk = length.into_chunk();
+                self.stack.push(vector.into_chunk());
+                self.stack.push(chunk);
             }
             _ => return Err(Fault::NotAVector),
         }
+        Ok(())
+    }
+
+    fn tuple_new(&mut self) -> Result<(), Fault> {
+        let size = self.stack.pop().get_boxed_value();
+        let size = match size {
+            Value::Integer(size) => size.to_usize().unwrap(),
+            _ => return Err(Fault::NotAnInteger),
+        };
+
+        let mut data = Vec::new();
+        for _ in 0..size {
+            let value = self.stack.pop().get_boxed_value();
+            data.push(value);
+        }
+
+        let tuple = Value::Tuple(Tuple::new(data.into_boxed_slice()));
+        self.stack.push(tuple.into_chunk());
+
+        Ok(())
+    }
+
+    fn tuple_get(&mut self) -> Result<(), Fault> {
+        let index = self.stack.pop().get_boxed_value();
+        let tuple = self.stack.pop().get_boxed_value();
+        match (tuple, index) {
+            (Value::Tuple(tuple), Value::Integer(index)) => {
+                let index = index.to_usize().unwrap();
+                let value = tuple.get(index).clone();
+                self.stack.push(tuple.into_chunk());
+                self.stack.push(value.into_chunk());
+            }
+            _ => return Err(Fault::NotATuple),
+        }
+        Ok(())
+    }
+
+    fn closure_new(&mut self, function_source: &FunctionSource, module: &Module, env: &mut Environment) -> Result<(), Fault> {
+        let mut function = match function_source {
+            FunctionSource::Name(name) => {
+                let function = module.get_function(name)
+                    .ok_or(Fault::FunctionNotFound(name.clone()))?;
+                function.clone()
+            }
+            _ => panic!("Closure source must be a function name (i.e. a lifted lambda)"),
+        };
+
+        function.add_environment(env.clone());
+
+        let closure = Value::Function(function);
+        self.stack.push(closure.into_chunk());
+
         Ok(())
     }
 
@@ -836,6 +783,7 @@ impl Core {
                         Value::Reference(_reference) => {
 
                             todo!("Implement function call by address");
+                            todo!("Make sure to extend environment");
                         }
                         _ => return Err(Fault::NotAReference),
                     }

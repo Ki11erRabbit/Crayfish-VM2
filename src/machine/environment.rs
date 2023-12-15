@@ -2,6 +2,7 @@ use std::fmt::{Debug, Display};
 use fxhash::FxHashMap;
 use crate::value::Value;
 
+#[derive(Clone)]
 pub struct Environment {
     hashmap: FxHashMap<Box<str>,Value>
 }
@@ -39,6 +40,10 @@ impl Environment {
 
     pub fn is_empty(&self) -> bool {
         self.hashmap.is_empty()
+    }
+
+    pub fn extend(&mut self, other: Environment) {
+        self.hashmap.extend(other.hashmap);
     }
 }
 

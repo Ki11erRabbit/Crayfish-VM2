@@ -8,7 +8,7 @@ use crate::value::function::Function;
 use crate::value::Value;
 
 pub mod core;
-mod environment;
+pub mod environment;
 
 
 #[derive(Debug)]
@@ -33,6 +33,7 @@ pub enum Fault {
     NotAVector,
     OutOfBounds,
     TypeMismatch,
+    NotATuple,
 }
 
 #[derive(Debug)]
@@ -99,10 +100,14 @@ fn call_function<'a>(core: &mut Core,
                 InstructionResult::Unwind(exn) => {
                     todo!("Add exn handling code")
                 }
-                InstructionResult::Call(function, environment) => {
+                InstructionResult::Call(function, mut environment) => {
+                    let function_env = (*function.get_environment()).clone();
+                    environment.extend(function_env);
                     result = call_function(core, module.clone(), &function, environment)?;
                 }
-                InstructionResult::CallRef(function, environment) => {
+                InstructionResult::CallRef(function, mut environment) => {
+                    let function_env = (*function.get_environment()).clone();
+                    environment.extend(function_env);
                     result = call_function(core, module.clone(), function, environment)?;
                 }
             }

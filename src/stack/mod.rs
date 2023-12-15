@@ -12,6 +12,7 @@ mod string_chunk;
 
 use std::cell::RefCell;
 use std::fmt::Display;
+use crate::value::integer::Integer;
 use crate::value::Value;
 
 pub trait StackChunk:Display {
@@ -20,7 +21,19 @@ pub trait StackChunk:Display {
     fn into_chunk(self) -> Box<dyn StackChunk>;
 }
 
+impl StackChunk for usize {
+    fn get_value(self) -> Value {
+        Value::Integer(Integer::U64(self as u64))
+    }
 
+    fn get_boxed_value(self: Box<Self>) -> Value {
+        Value::Integer(Integer::U64(*self as u64))
+    }
+
+    fn into_chunk(self) -> Box<dyn StackChunk> {
+        Box::new(self)
+    }
+}
 
 
 pub struct Stack {

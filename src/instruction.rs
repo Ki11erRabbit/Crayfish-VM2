@@ -3,6 +3,7 @@ use crate::program::{FunctionPath, StringTablePath};
 use crate::value::decimal::Decimal;
 use crate::value::integer::Integer;
 use crate::value::{Value, ValueType};
+use crate::value::vector::VectorType;
 
 #[derive(Clone)]
 pub struct Instruction {
@@ -184,15 +185,13 @@ pub enum RealInstruction {
     // Duplicate
     Duplicate,
     // Tuple
-    TupleNew(usize),
-    TupleGet(usize),
-    TupleSet(usize),
+    TupleNew,
+    TupleGet,
     // Vector
-    VectorNew(usize, ValueType),
-    VectorGet(usize),
-    VectorSet(usize),
+    VectorNew(VectorType),
+    VectorGet,
+    VectorSet,
     VectorLength,
-    VectorFree,
     // Product
     ProductNew(usize),
     ProductGet(Box<str>),
@@ -204,6 +203,7 @@ pub enum RealInstruction {
     // Function
     FunctionCall(FunctionSource, Condition),
     Return(Condition),
+    ClosureNew(FunctionSource),
     // Reference
     ReferenceNew,
     ReferenceGet,
@@ -272,22 +272,21 @@ impl Display for RealInstruction {
             Push(value) => write!(f, "push {}", value),
             Pop => write!(f, "pop"),
             Duplicate => write!(f, "duplicate"),
-            TupleNew(size) => write!(f, "tuple.new {}", size),
-            TupleGet(index) => write!(f, "tuple.get {}", index),
-            TupleSet(index) => write!(f, "tuple.set {}", index),
-            VectorNew(size, ty) => write!(f, "vector.new {} {}", size, ty),
-            VectorGet(index) => write!(f, "vector.get {}", index),
-            VectorSet(index) => write!(f, "vector.set {}", index),
+            TupleNew => write!(f, "tuple.new"),
+            TupleGet => write!(f, "tuple.get"),
+            VectorNew(ty) => write!(f, "vector.new {}", ty),
+            VectorGet => write!(f, "vector.get"),
+            VectorSet => write!(f, "vector.set"),
             VectorLength => write!(f, "vector.length"),
             ProductNew(size) => write!(f, "product.new {}", size),
             ProductGet(name) => write!(f, "product.get {}", name),
             ProductSet(index) => write!(f, "product.set {}", index),
-            VectorFree => write!(f, "vector.free"),
             SumNew(name) => write!(f, "sum.new {}", name),
             SumGet(name) => write!(f, "sum.get {}", name),
             SumSet(name) => write!(f, "sum.set {}", name),
             FunctionCall(source, condition) => write!(f, "function.call {} when {}", source, condition),
             Return(condition) => write!(f, "return when {}", condition),
+            ClosureNew(source) => write!(f, "closure.new {}", source),
             ReferenceNew => write!(f, "reference.new"),
             ReferenceGet => write!(f, "reference.get"),
             ReferenceSet => write!(f, "reference.set"),

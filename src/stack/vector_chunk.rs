@@ -1,6 +1,8 @@
+use std::cell::RefCell;
 use std::fmt::Display;
 use malachite::Natural;
 use crate::stack::StackChunk;
+use crate::value::function::Function;
 use crate::value::vector::Vector;
 use crate::value::Value;
 use crate::value::Reference;
@@ -13,11 +15,11 @@ macro_rules! vector_chunk {
 
         impl StackChunk for $type {
             fn get_value(self) -> Value {
-                Value::Vector(Vector::$variant(self.0, self.1))
+                Value::Vector(Vector::$variant(self.0))
             }
 
             fn get_boxed_value(self: Box<Self>) -> Value {
-                Value::Vector(Vector::$variant(self.0, self.1))
+                Value::Vector(Vector::$variant(self.0))
             }
 
             fn into_chunk(self) -> Box<dyn StackChunk> {
@@ -29,8 +31,11 @@ macro_rules! vector_chunk {
             fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
                 let mut vector = String::new();
                 vector.push_str("[");
-                for i in 0..self.1 {
-                    vector.push_str(&format!("{}, ", unsafe { std::ptr::read(self.0.offset(i as isize)) }));
+                for (i, value) in self.0.iter().enumerate() {
+                    if i > 0 {
+                        vector.push_str(", ");
+                    }
+                    vector.push_str(&format!("{}", value));
                 }
                 vector.push_str("]");
                 write!(f, "{}", vector)
@@ -39,22 +44,23 @@ macro_rules! vector_chunk {
     };
 }
 
-pub struct U8Vector(pub *mut u8, pub usize);
-pub struct U16Vector(pub *mut u16, pub usize);
-pub struct U32Vector(pub *mut u32, pub usize);
-pub struct U64Vector(pub *mut u64, pub usize);
-pub struct I8Vector(pub *mut i8, pub usize);
-pub struct I16Vector(pub *mut i16, pub usize);
-pub struct I32Vector(pub *mut i32, pub usize);
-pub struct I64Vector(pub *mut i64, pub usize);
-pub struct F32Vector(pub *mut f32, pub usize);
-pub struct F64Vector(pub *mut f64, pub usize);
-pub struct NaturalVector(pub *mut Natural, pub usize);
-pub struct IntegerVector(pub *mut malachite::Integer, pub usize);
-pub struct RationalVector(pub *mut malachite::Rational, pub usize);
-pub struct ReferenceVector(pub *mut Reference, pub usize);
-pub struct VectorVector(pub *mut Vector, pub usize);
-pub struct TupleVector(pub *mut Tuple, pub usize);
+pub struct U8Vector(pub Vec<u8>);
+pub struct U16Vector(pub Vec<u16>);
+pub struct U32Vector(pub Vec<u32>);
+pub struct U64Vector(pub Vec<u64>);
+pub struct I8Vector(pub Vec<i8>);
+pub struct I16Vector(pub Vec<i16>);
+pub struct I32Vector(pub Vec<i32>);
+pub struct I64Vector(pub Vec<i64>);
+pub struct F32Vector(pub Vec<f32>);
+pub struct F64Vector(pub Vec<f64>);
+pub struct NaturalVector(pub Vec<Natural>);
+pub struct IntegerVector(pub Vec<malachite::Integer>);
+pub struct RationalVector(pub Vec<malachite::Rational>);
+pub struct ReferenceVector(pub Vec<Reference>);
+pub struct VectorVector(pub Vec<Vector>);
+pub struct TupleVector(pub Vec<Tuple>);
+pub struct FunctionVector(pub Vec<Function>);
 
 
 vector_chunk!(U8, U8Vector);
@@ -73,5 +79,5 @@ vector_chunk!(Rational, RationalVector);
 vector_chunk!(Reference, ReferenceVector);
 vector_chunk!(Vector, VectorVector);
 vector_chunk!(Tuple, TupleVector);
-
+vector_chunk!(Function, FunctionVector);
 

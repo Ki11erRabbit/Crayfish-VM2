@@ -9,6 +9,22 @@ pub struct Tuple {
 
 impl Tuple {
 
+    pub fn new(data: Box<[Value]>) -> Tuple {
+        Tuple {
+            data,
+        }
+    }
+
+    pub fn empty() -> Tuple {
+        Tuple {
+            data: Box::new([]),
+        }
+    }
+
+    pub fn get(&self, index: usize) -> &Value {
+        &self.data[index]
+    }
+
     pub fn into_chunk(self) -> Box<dyn StackChunk> {
         Box::new(self)
     }
