@@ -9,4 +9,8 @@ impl StackChunk for String {
     fn get_boxed_value(self: Box<Self>) -> Value {
         Value::String(*self)
     }
+
+    fn into_chunk(self) -> Box<dyn StackChunk> {
+        Box::new(self)
+    }
 }

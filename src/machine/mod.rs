@@ -28,6 +28,11 @@ pub enum Fault {
     NotAnInteger,
     NotAFunction,
     NotAReference,
+    NotABoolean,
+    OutOfMemory,
+    NotAVector,
+    OutOfBounds,
+    TypeMismatch,
 }
 
 #[derive(Debug)]

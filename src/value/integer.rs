@@ -1,3 +1,4 @@
+use std::alloc::Layout;
 use std::fmt::{Debug, Display};
 use std::ops::{Neg, Not};
 use malachite::Natural;
@@ -7,7 +8,7 @@ use crate::stack::StackChunk;
 use crate::value::{Value, ValueType};
 use crate::value::decimal::DecimalType;
 
-#[derive(Debug,Clone, PartialEq, PartialOrd)]
+#[derive(Debug,Clone, Copy, PartialEq, PartialOrd)]
 pub enum IntegerType {
     U8,
     U16,
@@ -19,6 +20,38 @@ pub enum IntegerType {
     I64,
     Natural,
     Integer,
+}
+
+impl IntegerType {
+    pub fn get_layout(&self) -> Layout {
+        match self {
+            IntegerType::U8 => Layout::new::<u8>(),
+            IntegerType::U16 => Layout::new::<u16>(),
+            IntegerType::U32 => Layout::new::<u32>(),
+            IntegerType::U64 => Layout::new::<u64>(),
+            IntegerType::I8 => Layout::new::<i8>(),
+            IntegerType::I16 => Layout::new::<i16>(),
+            IntegerType::I32 => Layout::new::<i32>(),
+            IntegerType::I64 => Layout::new::<i64>(),
+            IntegerType::Natural => Layout::new::<Natural>(),
+            IntegerType::Integer => Layout::new::<malachite::Integer>(),
+        }
+    }
+
+    pub fn get_array_layout(&self, size: usize) -> Layout {
+        match self {
+            IntegerType::U8 => Layout::array::<u8>(size).unwrap(),
+            IntegerType::U16 => Layout::array::<u16>(size).unwrap(),
+            IntegerType::U32 => Layout::array::<u32>(size).unwrap(),
+            IntegerType::U64 => Layout::array::<u64>(size).unwrap(),
+            IntegerType::I8 => Layout::array::<i8>(size).unwrap(),
+            IntegerType::I16 => Layout::array::<i16>(size).unwrap(),
+            IntegerType::I32 => Layout::array::<i32>(size).unwrap(),
+            IntegerType::I64 => Layout::array::<i64>(size).unwrap(),
+            IntegerType::Natural => Layout::array::<Natural>(size).unwrap(),
+            IntegerType::Integer => Layout::array::<malachite::Integer>(size).unwrap(),
+        }
+    }
 }
 
 impl Display for IntegerType {
@@ -116,6 +149,21 @@ impl Integer {
             Integer::I64(value) => Box::new(value),
             Integer::Natural(value) => Box::new(value),
             Integer::Integer(value) => Box::new(value),
+        }
+    }
+
+    pub fn to_usize(self) -> Option<usize> {
+        match self {
+            Integer::U8(value) => Some(value as usize),
+            Integer::U16(value) => Some(value as usize),
+            Integer::U32(value) => Some(value as usize),
+            Integer::U64(value) => Some(value as usize),
+            Integer::I8(value) => Some(value as usize),
+            Integer::I16(value) => Some(value as usize),
+            Integer::I32(value) => Some(value as usize),
+            Integer::I64(value) => Some(value as usize),
+            Integer::Natural(_) => None,
+            Integer::Integer(_) => None,
         }
     }
 }

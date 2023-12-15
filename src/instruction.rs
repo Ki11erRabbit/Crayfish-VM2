@@ -186,11 +186,13 @@ pub enum RealInstruction {
     // Tuple
     TupleNew(usize),
     TupleGet(usize),
+    TupleSet(usize),
     // Vector
     VectorNew(usize, ValueType),
     VectorGet(usize),
     VectorSet(usize),
     VectorLength,
+    VectorFree,
     // Product
     ProductNew(usize),
     ProductGet(Box<str>),
@@ -221,7 +223,7 @@ pub enum RealInstruction {
     IntegerBitwiseNot,
     IntegerShiftLeft,
     IntegerShiftRight,
-    // Float
+    // Decimal
     DecimalNew(Decimal),
     DecimalAdd,
     DecimalSubtract,
@@ -272,6 +274,7 @@ impl Display for RealInstruction {
             Duplicate => write!(f, "duplicate"),
             TupleNew(size) => write!(f, "tuple.new {}", size),
             TupleGet(index) => write!(f, "tuple.get {}", index),
+            TupleSet(index) => write!(f, "tuple.set {}", index),
             VectorNew(size, ty) => write!(f, "vector.new {} {}", size, ty),
             VectorGet(index) => write!(f, "vector.get {}", index),
             VectorSet(index) => write!(f, "vector.set {}", index),
@@ -279,6 +282,7 @@ impl Display for RealInstruction {
             ProductNew(size) => write!(f, "product.new {}", size),
             ProductGet(name) => write!(f, "product.get {}", name),
             ProductSet(index) => write!(f, "product.set {}", index),
+            VectorFree => write!(f, "vector.free"),
             SumNew(name) => write!(f, "sum.new {}", name),
             SumGet(name) => write!(f, "sum.get {}", name),
             SumSet(name) => write!(f, "sum.set {}", name),

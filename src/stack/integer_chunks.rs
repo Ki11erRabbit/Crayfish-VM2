@@ -12,6 +12,9 @@ macro_rules! integer_chunk {
             fn get_boxed_value(self: Box<Self>) -> Value {
                 Value::Integer(Integer::$variant(*self))
             }
+            fn into_chunk(self) -> Box<dyn StackChunk> {
+                Box::new(self)
+            }
         }
     };
 }

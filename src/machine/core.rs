@@ -1,3 +1,4 @@
+use std::alloc::Layout;
 use std::collections::HashMap;
 use std::sync::Arc;
 use malachite::num::arithmetic::traits::Pow;
@@ -5,11 +6,14 @@ use crate::instruction::{ComparisonType, Condition, FunctionSource, Instruction,
 use crate::machine::{Fault, InstructionResult};
 use crate::machine::environment::Environment;
 use crate::program::module::Module;
-use crate::stack::Stack;
-use crate::value::Value;
+use crate::stack::{Stack, StackChunk};
+use crate::value::{Value, ValueType};
+use crate::value::decimal::DecimalType;
+use crate::value::integer::IntegerType;
+use crate::value::vector::{Vector, VectorType};
 
 
-macro_rules! basic_alu_op {
+macro_rules! basic_alu_op_int {
     ($fun_name:ident, $op:tt) => {
         fn $fun_name(&mut self) -> Result<(),Fault> {
             let right = self.stack.pop().get_boxed_value();
@@ -43,6 +47,39 @@ macro_rules! basic_alu_op {
     };
 }
 
+macro_rules! basic_alu_op_decimal {
+    ($fun_name:ident, $op:tt) => {
+        fn $fun_name(&mut self) -> Result<(),Fault> {
+            let right = self.stack.pop().get_boxed_value();
+            let left = self.stack.pop().get_boxed_value();
+            match (left, right) {
+                (Value::Decimal(left), Value::Decimal(right)) => {
+                    let result = left $op right;
+
+                    if result.is_zero() {
+                        self.flags.zero = true;
+                    } else {
+                        self.flags.zero = false;
+                    }
+
+                    if result.is_negative() {
+                        self.flags.negative = true;
+                    } else {
+                        self.flags.negative = false;
+                    }
+
+                    let chunk = result.into_chunk();
+
+                    self.stack.push(chunk);
+                }
+                _ => return Err(Fault::NotAnInteger),
+            }
+
+
+            Ok(())
+        }
+    };
+}
 
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -138,6 +175,24 @@ impl Core {
             Goto(target, condition) => return self.goto(target, condition, program_counter),
             Return(condition) => return self.return_instruction(condition, program_counter),
             FunctionCall(source, condition) => return self.function_call(source, condition, program_counter, module),
+            DecimalNew(decimal) => {
+                let chunk = decimal.clone().into_chunk();
+                self.stack.push(chunk);
+            }
+            DecimalAdd => self.decimal_add()?,
+            DecimalSubtract => self.decimal_subtract()?,
+            DecimalMultiply => self.decimal_multiply()?,
+            DecimalDivide => self.decimal_divide()?,
+            DecimalModulo => self.decimal_modulo()?,
+            DecimalPower => self.decimal_power()?,
+            DecimalNegate => self.decimal_negate()?,
+            BooleanNew(boolean) => {
+                let chunk = boolean.into_chunk();
+                self.stack.push(chunk);
+            }
+            BooleanAnd => self.boolean_and()?,
+            BooleanOr => self.boolean_or()?,
+            BooleanNot => self.boolean_not()?,
 
             x => panic!("Unimplemented instruction: {:?}", x),
         }
@@ -147,9 +202,9 @@ impl Core {
         Ok(InstructionResult::Continue)
     }
 
-    basic_alu_op!(integer_add, +);
-    basic_alu_op!(integer_subtract, -);
-    basic_alu_op!(integer_multiply, *);
+    basic_alu_op_int!(integer_add, +);
+    basic_alu_op_int!(integer_subtract, -);
+    basic_alu_op_int!(integer_multiply, *);
 
     fn integer_divide(&mut self) -> Result<(),Fault> {
         let right = self.stack.pop().get_boxed_value();
@@ -216,11 +271,11 @@ impl Core {
     }
 
 
-    basic_alu_op!(integer_bitwise_and, &);
-    basic_alu_op!(integer_bitwise_or, |);
-    basic_alu_op!(integer_bitwise_xor, ^);
-    basic_alu_op!(integer_shift_left, <<);
-    basic_alu_op!(integer_shift_right, >>);
+    basic_alu_op_int!(integer_bitwise_and, &);
+    basic_alu_op_int!(integer_bitwise_or, |);
+    basic_alu_op_int!(integer_bitwise_xor, ^);
+    basic_alu_op_int!(integer_shift_left, <<);
+    basic_alu_op_int!(integer_shift_right, >>);
 
     fn integer_power(&mut self) -> Result<(),Fault> {
         let right = self.stack.pop().get_boxed_value();
@@ -300,6 +355,365 @@ impl Core {
                 self.stack.push(chunk);
             }
             _ => return Err(Fault::NotAnInteger),
+        }
+        Ok(())
+    }
+
+    basic_alu_op_decimal!(decimal_add, +);
+    basic_alu_op_decimal!(decimal_subtract, -);
+    basic_alu_op_decimal!(decimal_multiply, *);
+
+    fn decimal_divide(&mut self) -> Result<(),Fault> {
+        let right = self.stack.pop().get_boxed_value();
+        let left = self.stack.pop().get_boxed_value();
+        match (left, right) {
+            (Value::Decimal(left), Value::Decimal(right)) => {
+                if right.is_zero() {
+                    return Err(Fault::DivisionByZero);
+                }
+
+                let result = left / right;
+
+                if result.is_zero() {
+                    self.flags.zero = true;
+                } else {
+                    self.flags.zero = false;
+                }
+
+                if result.is_negative() {
+                    self.flags.negative = true;
+                } else {
+                    self.flags.negative = false;
+                }
+
+                let chunk = result.into_chunk();
+
+                self.stack.push(chunk);
+            }
+            _ => return Err(Fault::NotAnInteger),
+        }
+        Ok(())
+    }
+
+    fn decimal_modulo(&mut self) -> Result<(),Fault> {
+        let right = self.stack.pop().get_boxed_value();
+        let left = self.stack.pop().get_boxed_value();
+        match (left, right) {
+            (Value::Decimal(left), Value::Decimal(right)) => {
+                if right.is_zero() {
+                    return Err(Fault::DivisionByZero);
+                }
+
+                let result = left % right;
+
+                if result.is_zero() {
+                    self.flags.zero = true;
+                } else {
+                    self.flags.zero = false;
+                }
+
+                if result.is_negative() {
+                    self.flags.negative = true;
+                } else {
+                    self.flags.negative = false;
+                }
+
+                let chunk = result.into_chunk();
+
+                self.stack.push(chunk);
+            }
+            _ => return Err(Fault::NotAnInteger),
+        }
+        Ok(())
+    }
+
+    fn decimal_power(&mut self) -> Result<(),Fault> {
+        let right = self.stack.pop().get_boxed_value();
+        let left = self.stack.pop().get_boxed_value();
+        match (left, right) {
+            (Value::Decimal(left), Value::Integer(right)) => {
+                let result = left.powi(right);
+
+                if result.is_zero() {
+                    self.flags.zero = true;
+                } else {
+                    self.flags.zero = false;
+                }
+
+                if result.is_negative() {
+                    self.flags.negative = true;
+                } else {
+                    self.flags.negative = false;
+                }
+
+                let chunk = result.into_chunk();
+
+                self.stack.push(chunk);
+            }
+            (Value::Decimal(left), Value::Decimal(right)) if !left.is_rational() && !right.is_rational() => {
+                let result = left.powd(right);
+
+                if result.is_zero() {
+                    self.flags.zero = true;
+                } else {
+                    self.flags.zero = false;
+                }
+
+                if result.is_negative() {
+                    self.flags.negative = true;
+                } else {
+                    self.flags.negative = false;
+                }
+
+                let chunk = result.into_chunk();
+
+                self.stack.push(chunk);
+            }
+            _ => return Err(Fault::NotAnInteger),
+        }
+        Ok(())
+    }
+
+    fn decimal_negate(&mut self) -> Result<(),Fault> {
+        let value = self.stack.pop().get_boxed_value();
+        match value {
+            Value::Decimal(value) => {
+                let result = -value;
+
+                if result.is_zero() {
+                    self.flags.zero = true;
+                } else {
+                    self.flags.zero = false;
+                }
+
+                if result.is_negative() {
+                    self.flags.negative = true;
+                } else {
+                    self.flags.negative = false;
+                }
+
+                let chunk = result.into_chunk();
+
+                self.stack.push(chunk);
+            }
+            _ => return Err(Fault::NotAnInteger),
+        }
+        Ok(())
+    }
+
+    fn boolean_and(&mut self) -> Result<(),Fault> {
+        let right = self.stack.pop().get_boxed_value();
+        let left = self.stack.pop().get_boxed_value();
+
+        match (left, right) {
+            (Value::Boolean(left), Value::Boolean(right)) => {
+                let result = left && right;
+                let chunk = result.into_chunk();
+                self.stack.push(chunk);
+            }
+            _ => return Err(Fault::NotABoolean),
+        }
+        Ok(())
+    }
+
+    fn boolean_or(&mut self) -> Result<(),Fault> {
+        let right = self.stack.pop().get_boxed_value();
+        let left = self.stack.pop().get_boxed_value();
+
+        match (left, right) {
+            (Value::Boolean(left), Value::Boolean(right)) => {
+                let result = left || right;
+                let chunk = result.into_chunk();
+                self.stack.push(chunk);
+            }
+            _ => return Err(Fault::NotABoolean),
+        }
+        Ok(())
+    }
+
+    fn boolean_not(&mut self) -> Result<(),Fault> {
+        let value = self.stack.pop().get_boxed_value();
+
+        match value {
+            Value::Boolean(value) => {
+                let result = !value;
+                let chunk = result.into_chunk();
+                self.stack.push(chunk);
+            }
+            _ => return Err(Fault::NotABoolean),
+        }
+        Ok(())
+    }
+
+    fn vector_new(&mut self, size: usize, typ: &ValueType) -> Result<(), Fault> {
+        let vec = match typ {
+            ValueType::Integer(int_type) => {
+                let layout = int_type.get_array_layout(size);
+                let pointer = unsafe { std::alloc::alloc(layout) };
+                if pointer.is_null() {
+                    return Err(Fault::OutOfMemory);
+                }
+
+                let vec = match int_type {
+                    IntegerType::U8 => Vector::U8(pointer, size),
+                    IntegerType::U16 => Vector::U16(pointer as *mut u16, size),
+                    IntegerType::U32 => Vector::U32(pointer as *mut u32, size),
+                    IntegerType::U64 => Vector::U64(pointer as *mut u64, size),
+                    IntegerType::I8 => Vector::I8(pointer as *mut i8, size),
+                    IntegerType::I16 => Vector::I16(pointer as *mut i16, size),
+                    IntegerType::I32 => Vector::I32(pointer as *mut i32, size),
+                    IntegerType::I64 => Vector::I64(pointer as *mut i64, size),
+                    IntegerType::Natural => Vector::Natural(pointer as *mut malachite::Natural, size),
+                    IntegerType::Integer => Vector::Integer(pointer as *mut malachite::Integer, size),
+                };
+
+                vec
+            }
+            ValueType::Decimal(dec_type) => {
+                let layout = dec_type.get_array_layout(size);
+                let pointer = unsafe { std::alloc::alloc(layout) };
+                if pointer.is_null() {
+                    return Err(Fault::OutOfMemory);
+                }
+
+                let vec = match dec_type {
+                    DecimalType::F32 => Vector::F32(pointer as *mut f32, size),
+                    DecimalType::F64 => Vector::F64(pointer as *mut f64, size),
+                    DecimalType::Rational => Vector::Rational(pointer as *mut malachite::Rational, size),
+                };
+
+                vec
+            }
+            ValueType::Vector(vec_type) => {
+                let layout = Layout::array::<Vector>(size).unwrap();
+                let pointer = unsafe { std::alloc::alloc(layout) } as *mut Vector;
+                if pointer.is_null() {
+                    return Err(Fault::OutOfMemory);
+                }
+
+                Self::build_vector_of_vectors(pointer, size, vec_type)?;
+
+                Vector::Vector(pointer, size)
+            }
+            _ => unimplemented!("Vector type: {:?}", typ),
+        };
+
+        self.stack.push(vec.into_chunk());
+
+        Ok(())
+    }
+
+    fn build_vector_of_vectors(mut pointer: *mut Vector, pointer_size: usize, vec_type: &VectorType) -> Result<(), Fault> {
+        match vec_type {
+            VectorType::Vector(vec_type, size) => {
+                let layout = vec_type.get_array_layout(*size);
+                for _ in 0..pointer_size {
+                    let new_pointer = unsafe { std::alloc::alloc(layout) } as *mut Vector;
+                    if new_pointer.is_null() {
+                        return Err(Fault::OutOfMemory);
+                    }
+
+                    Self::build_vector_of_vectors(new_pointer, *size, vec_type)?;
+
+                    unsafe { std::ptr::write(pointer, Vector::Vector(new_pointer, *size)) };
+                    pointer = unsafe { pointer.add(1) };
+                }
+            }
+            x => {
+                for _ in 0..pointer_size {
+                    let new_pointer = unsafe { std::alloc::alloc(x.get_layout()) };
+                    if new_pointer.is_null() {
+                        return Err(Fault::OutOfMemory);
+                    }
+
+                    match x {
+                        VectorType::U8(size) => {
+                            unsafe { std::ptr::write(pointer, Vector::U8(new_pointer as *mut u8, *size)) };
+                        }
+                        VectorType::U16(size) => {
+                            unsafe { std::ptr::write(pointer, Vector::U16(new_pointer as *mut u16, *size)) };
+                        }
+                        VectorType::U32(size) => {
+                            unsafe { std::ptr::write(pointer, Vector::U32(new_pointer as *mut u32, *size)) };
+                        }
+                        VectorType::U64(size) => {
+                            unsafe { std::ptr::write(pointer, Vector::U64(new_pointer as *mut u64, *size)) };
+                        }
+                        VectorType::I8(size) => {
+                            unsafe { std::ptr::write(pointer, Vector::I8(new_pointer as *mut i8, *size)) };
+                        }
+                        VectorType::I16(size) => {
+                            unsafe { std::ptr::write(pointer, Vector::I16(new_pointer as *mut i16, *size)) };
+                        }
+                        VectorType::I32(size) => {
+                            unsafe { std::ptr::write(pointer, Vector::I32(new_pointer as *mut i32, *size)) };
+                        }
+                        VectorType::I64(size) => {
+                            unsafe { std::ptr::write(pointer, Vector::I64(new_pointer as *mut i64, *size)) };
+                        }
+                        VectorType::Natural(size) => {
+                            unsafe { std::ptr::write(pointer, Vector::Natural(new_pointer as *mut malachite::Natural, *size)) };
+                        }
+                        VectorType::Integer(size) => {
+                            unsafe { std::ptr::write(pointer, Vector::Integer(new_pointer as *mut malachite::Integer, *size)) };
+                        }
+                        VectorType::F32(size) => {
+                            unsafe { std::ptr::write(pointer, Vector::F32(new_pointer as *mut f32, *size)) };
+                        }
+                        VectorType::F64(size) => {
+                            unsafe { std::ptr::write(pointer, Vector::F64(new_pointer as *mut f64, *size)) };
+                        }
+                        VectorType::Rational(size) => {
+                            unsafe { std::ptr::write(pointer, Vector::Rational(new_pointer as *mut malachite::Rational, *size)) };
+                        }
+                        VectorType::Vector(_, _) => unreachable!(),
+                        z => unreachable!("{:?}", z),
+                    }
+                    pointer = unsafe { pointer.add(1) };
+                }
+
+            }
+        }
+        Ok(())
+    }
+
+    fn vector_get(&mut self) -> Result<(), Fault> {
+        let index = self.stack.pop().get_boxed_value();
+        let vector = self.stack.pop().get_boxed_value();
+        match (vector, index) {
+            (Value::Vector(vector), Value::Integer(index)) => {
+                let index = index.to_usize().unwrap();
+                let value = vector.get(index)?.clone();
+                self.stack.push(vector.into_chunk());
+                self.stack.push(value.into_chunk());
+            }
+            _ => return Err(Fault::NotAVector),
+        }
+        Ok(())
+    }
+
+    fn vector_set(&mut self) -> Result<(), Fault> {
+        let value = self.stack.pop().get_boxed_value();
+        let index = self.stack.pop().get_boxed_value();
+        let mut vector = self.stack.pop().get_boxed_value();
+        match (vector, index) {
+            (Value::Vector(mut vector), Value::Integer(index)) => {
+                let index = index.to_usize().unwrap();
+                vector.set(index,value)?;
+                self.stack.push(vector.into_chunk());
+            }
+            _ => return Err(Fault::NotAVector),
+        }
+        Ok(())
+    }
+
+    fn vector_free(&mut self) -> Result<(), Fault> {
+        let vector = self.stack.pop().get_boxed_value();
+        match vector {
+            Value::Vector(vector) => {
+                vector.free();
+            }
+            _ => return Err(Fault::NotAVector),
         }
         Ok(())
     }

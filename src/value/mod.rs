@@ -49,7 +49,7 @@ impl Display for ValueType {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct Reference(pub u64);
 
 impl Display for Reference {

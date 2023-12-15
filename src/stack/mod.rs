@@ -17,8 +17,7 @@ use crate::value::Value;
 pub trait StackChunk:Display {
     fn get_value(self) -> Value;
     fn get_boxed_value(self: Box<Self>) -> Value;
-
-
+    fn into_chunk(self) -> Box<dyn StackChunk>;
 }
 
 

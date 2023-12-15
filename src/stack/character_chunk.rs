@@ -12,4 +12,8 @@ impl StackChunk for char {
     fn get_boxed_value(self: Box<Self>) -> Value {
         Value::Character(*self)
     }
+
+    fn into_chunk(self) -> Box<dyn StackChunk> {
+        Box::new(self)
+    }
 }

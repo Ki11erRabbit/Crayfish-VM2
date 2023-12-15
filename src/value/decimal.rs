@@ -1,4 +1,6 @@
+use std::alloc::Layout;
 use std::fmt::{Debug, Display};
+use malachite::num::arithmetic::traits::Pow;
 use malachite::num::basic::traits::Zero;
 use crate::stack::StackChunk;
 use crate::value::integer::{Integer, IntegerType};
@@ -9,6 +11,17 @@ pub enum DecimalType {
     F32,
     F64,
     Rational,
+}
+
+impl DecimalType {
+
+    pub fn get_array_layout(&self, size: usize) -> Layout {
+        match self {
+            DecimalType::F32 => Layout::array::<f32>(size).unwrap(),
+            DecimalType::F64 => Layout::array::<f64>(size).unwrap(),
+            DecimalType::Rational => Layout::array::<malachite::Rational>(size).unwrap(),
+        }
+    }
 }
 
 impl Display for DecimalType {
@@ -71,6 +84,46 @@ impl Decimal {
             Decimal::Rational(value) => Box::new(value),
         }
     }
+
+    pub fn powd(self, exponent: Self) -> Self {
+        match (self, exponent) {
+            (Decimal::F32(left), Decimal::F32(right)) => Decimal::F32(left.powf(right)),
+            (Decimal::F64(left), Decimal::F64(right)) => Decimal::F64(left.powf(right)),
+            (Decimal::F32(left), Decimal::F64(right)) => Decimal::F64((left as f64).powf(right)),
+            (Decimal::F64(left), Decimal::F32(right)) => Decimal::F64(left.powf(right as f64)),
+            (x, y) => panic!("Cannot raise {:?} to {:?}", x, y),
+        }
+    }
+
+    /// Raises the decimal to the power of the integer.
+    /// For Rationals the exponent must be a i64.
+    /// For floats the exponent must be a i32.
+    pub fn powi(self, exponent: Integer) -> Self {
+
+        match self {
+            Decimal::F32(value) => {
+                let exponent: i32 = exponent.into();
+                Decimal::F32(value.powi(exponent))
+            },
+            Decimal::F64(value) => {
+                let exponent: i32 = exponent.into();
+                Decimal::F64(value.powi(exponent))
+            },
+            Decimal::Rational(value) => {
+                let exponent: i64 = exponent.into();
+                Decimal::Rational(value.pow(exponent))
+            },
+        }
+    }
+
+    pub fn is_rational(&self) -> bool {
+        match self {
+            Decimal::Rational(_) => true,
+            _ => false,
+        }
+    }
+
+
 }
 
 impl std::ops::Add for Decimal {

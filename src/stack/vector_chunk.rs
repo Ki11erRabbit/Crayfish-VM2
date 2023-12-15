@@ -4,6 +4,7 @@ use crate::stack::StackChunk;
 use crate::value::vector::Vector;
 use crate::value::Value;
 use crate::value::Reference;
+use crate::value::tuple::Tuple;
 
 
 macro_rules! vector_chunk {
@@ -17,6 +18,10 @@ macro_rules! vector_chunk {
 
             fn get_boxed_value(self: Box<Self>) -> Value {
                 Value::Vector(Vector::$variant(self.0, self.1))
+            }
+
+            fn into_chunk(self) -> Box<dyn StackChunk> {
+                Box::new(self)
             }
         }
 
@@ -48,6 +53,8 @@ pub struct NaturalVector(pub *mut Natural, pub usize);
 pub struct IntegerVector(pub *mut malachite::Integer, pub usize);
 pub struct RationalVector(pub *mut malachite::Rational, pub usize);
 pub struct ReferenceVector(pub *mut Reference, pub usize);
+pub struct VectorVector(pub *mut Vector, pub usize);
+pub struct TupleVector(pub *mut Tuple, pub usize);
 
 
 vector_chunk!(U8, U8Vector);
@@ -64,5 +71,7 @@ vector_chunk!(Natural, NaturalVector);
 vector_chunk!(Integer, IntegerVector);
 vector_chunk!(Rational, RationalVector);
 vector_chunk!(Reference, ReferenceVector);
+vector_chunk!(Vector, VectorVector);
+vector_chunk!(Tuple, TupleVector);
 
 
