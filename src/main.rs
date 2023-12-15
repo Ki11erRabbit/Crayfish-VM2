@@ -91,6 +91,59 @@ fn rec_fib_main() -> Function {
 }
 
 
+/*fn matrix_multiply() -> Function {
+    use instruction::RealInstruction::*;
+    let instruction = Box::new([
+        Instruction::new(Lookup("f".to_string().into())),
+        Instruction::new(IntegerNew(Integer::U64(0))),
+        Instruction::new(VectorGet),
+        Instruction::new(IntegerNew(Integer::U64(0))),
+        Instruction::new(VectorGet),
+        Instruction::new(Store("x1".to_string().into())),
+        Instruction::new(Store("f0".to_string().into())),
+        Instruction::new(Lookup("m".to_string().into())),
+        Instruction::new(IntegerNew(Integer::U64(0))),
+        Instruction::new(VectorGet),
+        Instruction::new(IntegerNew(Integer::U64(0))),
+        Instruction::new(VectorGet),
+        Instruction::new(Lookup("x1".to_string().into())),
+        Instruction::new(IntegerMultiply),
+        Instruction::new(Store("x1".to_string().into())),
+        Instruction::new(Store("m0".to_string().into())),
+        Instruction::new(Lookup("f0".to_string().into())),
+        Instruction::new(IntegerNew(Integer::U64(1))),
+        Instruction::new(VectorGet),
+        Instruction::new(Store("x2".to_string().into())),
+        Instruction::new(Pop),
+        Instruction::new(Lookup("m".to_string().into())),
+        Instruction::new(IntegerNew(Integer::U64(1))),
+        Instruction::new(VectorGet),
+        Instruction::new(IntegerNew(Integer::U64(0))),
+        Instruction::new(VectorGet),
+        Instruction::new(Lookup("x2".to_string().into())),
+        Instruction::new(IntegerMultiply),
+        Instruction::new(Store("x2".to_string().into())),
+        Instruction::new(Lookup("x2".to_string().into())),
+        Instruction::new(Lookup("x1".to_string().into())),
+        Instruction::new(IntegerAdd),
+        Instruction::new(Store("x".to_string().into())),
+        Instruction::new(Store("m1".to_string().into())),
+        Instruction::new(Pop),
+        Instruction::new(Lookup("f0".to_string().into())),
+        Instruction::new(IntegerNew(Integer::U64(0))),
+        Instruction::new(VectorGet),
+        Instruction::new(Lookup("m0".to_string().into())),
+        Instruction::new(IntegerNew(Integer::U64(1))),
+        Instruction::new(VectorGet),
+        Instruction::new(Store("y1".to_string().into())),
+        Instruction::new(Pop),
+
+
+
+
+    ])
+}*/
+
 
 fn main() {
     let mut module = Module::default();

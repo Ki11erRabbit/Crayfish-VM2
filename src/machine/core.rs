@@ -126,8 +126,8 @@ impl Core {
                                program_counter: &mut usize,
                                environment: &mut Environment,
                                module: &'a Module) -> Result<InstructionResult<'a>, Fault> {
-        println!("Executing instruction: {}", instruction);
-        println!("Stack: {}", self.stack);
+        //println!("Executing instruction: {}", instruction);
+        //println!("Stack: {}", self.stack);
 
         use RealInstruction::*;
         match &instruction.instruction {
@@ -771,7 +771,7 @@ impl Core {
                     let function = module.get_function(name)
                         .ok_or(Fault::FunctionNotFound(name.clone()))?;
                     let mut environment = Environment::new();
-                    for (i, parameter) in function.argument_names.iter().enumerate() {
+                    for parameter in function.argument_names.iter() {
                         let value = self.stack.pop();
                         environment.insert(parameter.clone(), value.get_boxed_value());
                     }
@@ -783,7 +783,6 @@ impl Core {
                         Value::Reference(_reference) => {
 
                             todo!("Implement function call by address");
-                            todo!("Make sure to extend environment");
                         }
                         _ => return Err(Fault::NotAReference),
                     }
@@ -793,7 +792,7 @@ impl Core {
                     match function {
                         Value::Function(function) => {
                             let mut environment = Environment::new();
-                            for (i, parameter) in function.argument_names.iter().enumerate() {
+                            for parameter in function.argument_names.iter() {
                                 let value = self.stack.pop();
                                 environment.insert(parameter.clone(), value.get_boxed_value());
                             }

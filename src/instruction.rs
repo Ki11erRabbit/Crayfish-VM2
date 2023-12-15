@@ -208,6 +208,7 @@ pub enum RealInstruction {
     ReferenceNew,
     ReferenceGet,
     ReferenceSet,
+    ReferenceSetShared,
     // Integer
     IntegerNew(Integer),
     IntegerAdd,
